@@ -1,0 +1,1035 @@
+<html lang="ko"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#f4f7f9">
+    <title>Eden_Voc_보안인증형</title>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        
+        body { font-family: 'Pretendard', sans-serif; background-color: #e9ecef; margin: 0; padding: 0; display: flex; justify-content: center; align-items: flex-start; height: 100dvh; overflow: hidden; user-select: none; }
+        .app-container { width: 100%; max-width: 480px; height: 100dvh; background-color: #f4f7f9; display: flex; flex-direction: column; box-shadow: 0 0 25px rgba(0,0,0,0.15); overflow-y: auto; overflow-x: hidden; position: relative; }
+
+        /* 상단 패널 */
+        .top-panel { background: white; padding: 12px 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); z-index: 10; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; align-items: center;}
+        .control-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; width: 100%; max-width: 440px;}
+        .control-row select { flex: 1; min-width: 90px; padding: 6px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; font-weight: bold; color: #222; }
+        
+        .lang-options { display: flex; justify-content: center; gap: 12px; font-size: 14px; font-weight: 800; color: #1a5f7a; white-space: nowrap; flex: 1; min-width: 140px;}
+        .lang-options label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+        .lang-options input[type="radio"] { transform: scale(1.3); margin-right: 4px; }
+        
+        .panel-btns { display: flex; justify-content: center; gap: 8px; flex: 1; min-width: 140px;}
+        .btn-panel { flex: 1; background: #95a5a6; color: white; border: none; padding: 8px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; line-height: 1.3; font-size: 13px; white-space: nowrap; transition: 0.2s;}
+        .btn-panel:active { transform: scale(0.95); }
+        .btn-panel.primary { background: #3498db; }
+        .btn-panel.upload { background: #8e44ad; } 
+
+        /* 상태 정보 */
+        .status-header { padding: 12px 20px; display: flex; flex-direction: column; width: 100%; box-sizing: border-box; gap: 10px; flex-shrink: 0;}
+        .mode-title { font-size: 18px; font-weight: 900; color: #222; text-align: center; margin: 0; }
+        .status-info-row { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .badge-group { display: flex; gap: 8px; align-items: center; }
+        
+        .progress-badge { font-size: 14px; font-weight: 800; padding: 6px 12px; border-radius: 15px; white-space: nowrap; transition: background-color 0.3s, color 0.3s; }
+        .badge-default { background: #e8f4fd; color: #3498db; }
+        .badge-cycle-1 { background: #e8f4fd; color: #3498db; } 
+        .badge-cycle-2 { background: #f5eef8; color: #9b59b6; } 
+        .badge-cycle-3 { background: #fdedec; color: #e74c3c; } 
+        .badge-cycle-4 { background: #f4f6f7; color: #2c3e50; } 
+
+        .stopwatch-badge { font-size: 16px; font-weight: 900; background: #fff3e0; color: #d35400; padding: 6px 14px; border-radius: 15px; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.05); letter-spacing: 1px; white-space: nowrap;}
+
+        /* 대시보드 */
+        .dashboard { display: flex; justify-content: space-between; gap: 8px; width: 92%; max-width: 440px; margin: 0 auto 10px auto; flex-shrink: 0;}
+        .box-status { flex: 1; background: white; padding: 8px 0; border-radius: 10px; text-align: center; font-size: 13px; font-weight: bold; box-shadow: 0 1px 5px rgba(0,0,0,0.06); }
+        .box-left { color: #ff5252; border-bottom: 4px solid #ff5252; }
+        .box-mid { color: #f39c12; border-bottom: 4px solid #f39c12; }
+        .box-right { color: #2ed573; border-bottom: 4px solid #2ed573; }
+
+        .timer-container { width: 92%; max-width: 440px; height: 5px; background-color: #ddd; border-radius: 3px; overflow: hidden; display: none; margin: 0 auto 10px auto; flex-shrink: 0;}
+        .timer-bar { height: 100%; width: 100%; background-color: #ff4d4d; }
+
+        /* === 카드 영역 === */
+        .main-area-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; padding: 10px 15px; box-sizing: border-box; position: relative; min-height: 280px;}
+        .main-area { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; perspective: 1000px; }
+        
+        .swipe-wrapper { width: 95%; max-width: 420px; cursor: grab; position: relative; z-index: 5; touch-action: none; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s; }
+        .swipe-wrapper:active { cursor: grabbing; }
+        
+        .card { width: 100%; aspect-ratio: 1.2 / 1.0; max-height: 55dvh; position: relative; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s, border 0.3s; transform-style: preserve-3d; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); border: 2px solid transparent; background: white; }
+        .card.is-flipped { transform: rotateY(180deg); }
+        
+        .card-face { width: 100%; height: 100%; position: absolute; backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 18px; background: white; padding: 20px; box-sizing: border-box; text-align: center; }
+        .card-back { transform: rotateY(180deg); background-color: #f0f8ff; }
+        
+        .text-container { width: 100%; height: 75%; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; padding: 10px; box-sizing: border-box; word-break: keep-all; gap: 8px;}
+        
+        .word-text { font-weight: 800; line-height: 1.3; transition: font-size 0.1s ease; text-align: center; width: 100%; margin: 0;}
+
+        .guide-text { font-size: 13px; color: #bbb; position: absolute; bottom: 15px; transition: 0.3s; }
+        .academy-logo { margin-top: 15px; font-size: 15px; font-weight: 900; color: #b2bec3; letter-spacing: 2px; text-align: center; flex-shrink: 0; padding-bottom: 10px;}
+
+        .swipe-info-guide { width: 100%; text-align: center; padding: 12px 0; background: #fff; border-top: 1px solid #eee; display: flex; justify-content: space-around; font-size: 13px; font-weight: bold; flex-shrink: 0;}
+        .guide-item { display: flex; flex-direction: column; gap: 4px; }
+
+        /* === 모달 === */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: rgba(0,0,0,0.75); z-index: 100; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 440px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.4); max-height: 90dvh; display: flex; flex-direction: column; overflow-y: auto;}
+        
+        .input-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+        .input-group input { padding: 12px; border-radius: 8px; border: 1px solid #ccc; font-size: 15px; text-align: center; font-family: 'Pretendard'; }
+        
+        .btn-main { width: 100%; padding: 15px; margin-top: 10px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; font-size: 16px; color: white; transition: 0.2s; flex-shrink: 0;}
+        .btn-blue { background: #3498db; }
+        .btn-orange { background: #f39c12; }
+        .btn-green { background: #2ed573; }
+        .btn-gray { background: #95a5a6; }
+        .btn-dark { background: #34495e; margin-top: 20px;}
+        .btn-submit { background: #e67e22; border: 2px solid #d35400; box-shadow: 0 4px 10px rgba(211,84,0,0.3); animation: pulse 2s infinite;}
+        .btn-admin { background: #8e44ad; } 
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        
+        .hidden { display: none !important; }
+        .textbook-title { font-size: 20px; font-weight: 900; color: #1a5f7a; margin-bottom: 15px; background: #e8f4fd; padding: 10px; border-radius: 10px; }
+
+        /* 학습 기록 테이블 */
+        .table-responsive { width: 100%; overflow-x: auto; margin-bottom: 15px; flex: 1; min-height: 200px; border-radius: 8px; border: 1px solid #eee;}
+        .history-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; white-space: nowrap; }
+        .history-table th, .history-table td { border: 1px solid #ddd; padding: 10px 5px; vertical-align: middle; }
+        .history-table th { background: #fdf2e9; color: #333; font-weight: bold; position: sticky; top: 0; font-size: 13px; z-index: 2;}
+        .history-table td { color: #555; }
+        .wrong-words-cell { max-height: 80px; overflow-y: auto; display: block; text-align: left; font-size: 11px; line-height: 1.4; padding: 6px; background: #fffcfc;}
+
+        @media (max-height: 650px), (orientation: landscape) {
+            .top-panel { padding: 8px 10px; gap: 6px; }
+            .control-row select { padding: 4px 6px; font-size: 12px; }
+            .card { max-height: 50dvh; } 
+        }
+    </style>
+</head>
+<body>
+
+<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+
+<div class="app-container">
+    <input type="file" id="csvFileInput" accept=".csv" onchange="handleCsvUpload(event)" style="display:none;">
+
+    <div id="modalOverlay" class="modal-overlay" style="display: flex;">
+        
+        <div id="adminModal" class="modal-content">
+            <h2 style="color:#8e44ad; margin-top:0;">Master 관리자 모드</h2>
+            <p style="font-size: 14px; color: #666;">배포할 교재 이름과 CSV를 넣어주세요.</p>
+            <input type="text" id="adminBookName" placeholder="교재 제목 입력 (예: 수능특강 1강)" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #8e44ad; margin-bottom: 15px; text-align: center; box-sizing: border-box;">
+            <button class="btn-main btn-admin" onclick="triggerCsvUpload()">1. CSV 단어장 업로드</button>
+            <button class="btn-main btn-blue" id="genFileBtn" onclick="generateStudentFile()" style="opacity: 1;">2. 학생용 파일 제작 &amp; 다운로드</button>
+            <p id="uploadStatus" style="font-size: 12px; color: #e74c3c; margin-top: 10px;">248개 단어 준비 완료!</p>
+        </div>
+
+        <div id="startModal" class="modal-content hidden">
+            <div id="studentBookTitle" class="textbook-title">Eden_Voc</div>
+            <div class="input-group">
+                <input type="number" id="seatInput" placeholder="좌석번호">
+                <input type="text" id="nameInput" placeholder="이름">
+                <input type="password" id="pwInput" placeholder="인증 비밀번호">
+            </div>
+            <div style="background:#fdf2e9; padding:15px; border-radius:12px; margin-bottom:15px; text-align:left; font-size:14px; font-weight: bold; color: #1a5f7a;">
+                <label style="display: flex; align-items: center; margin-bottom: 8px;"><input type="radio" name="modalLang" value="en2ko" checked="" style="transform: scale(1.4); margin-right: 8px;"> 어휘/한자어 ➔ 뜻 연습</label>
+                <label style="display: flex; align-items: center;"><input type="radio" name="modalLang" value="ko2en" style="transform: scale(1.4); margin-right: 8px;"> 뜻 ➔ 어휘/한자어 연습</label>
+            </div>
+            <div id="authBtnGroup" style="display: flex; flex-direction: column; gap: 8px; pointer-events: auto; opacity: 1;">
+                <button class="btn-main btn-blue" onclick="verifyAndInit(1)">1차 학습 시작 (단어 익히기)</button>
+                <button class="btn-main btn-orange" onclick="verifyAndInit(2)">2차 학습 시작 (박스 분류)</button>
+                <button class="btn-main btn-green" onclick="verifyAndInit(3)">3차 학습 시작 (3초 테스트)</button>
+                <button class="btn-main btn-dark" onclick="verifyAndInit(4)">4차 학습 시작 (오답 복습)</button>
+            </div>
+            
+            <div style="display:flex; flex-direction:column; gap: 10px; margin-top: 20px;">
+                <button class="btn-main btn-submit" onclick="sendDataToGoogleForm()">📊 학습 결과 원장님께 전송하기</button>
+                <button class="btn-main" style="background:#2c3e50; margin:0; padding:12px; font-size:14px;" onclick="showGuideModal()">📱 홈 화면에 앱 만들기 (가이드)</button>
+            </div>
+        </div>
+
+        <div id="guideModal" class="modal-content hidden">
+            <h2 style="color:#2c3e50; margin-top:0; font-size: 22px;">📱 바탕화면 바로가기 만들기</h2>
+            <div style="text-align: left; font-size: 14px; color: #333; line-height: 1.6; background:#f4f7f9; padding:15px; border-radius:12px; margin-bottom:15px;">
+                <p style="margin-top:0;">매번 카톡에서 열 필요 없이 바탕화면에 <b>바로가기 아이콘</b>을 설치할 수 있습니다.</p>
+                <hr style="border:0; border-top:1px solid #ddd; margin:10px 0;">
+                <p style="color:#1a5f7a; font-weight:bold;">🍎 아이폰 (Safari) 사용자</p>
+                <p style="margin:5px 0 10px 0;">1. 화면 하단의 <b>[공유하기(네모와 화살표)]</b> 아이콘 클릭<br>
+                2. 메뉴를 위로 올려 <b>[홈 화면에 추가]</b> 클릭</p>
+                
+                <p style="color:#1a5f7a; font-weight:bold;">🤖 안드로이드 (Chrome) 사용자</p>
+                <p style="margin:5px 0 0 0;">1. 화면 우측 상단의 <b>[점 3개(⋮)]</b> 메뉴 클릭<br>
+                2. <b>[홈 화면에 추가]</b> 클릭</p>
+            </div>
+            <button class="btn-main btn-gray" onclick="closeGuideModal()">뒤로 가기</button>
+        </div>
+
+        <div id="resultModal" class="modal-content hidden">
+            <h2 id="resultTitle" style="font-size: 24px;">단계 완료!</h2>
+            <div style="display: flex; justify-content: space-around; margin: 15px 0; font-weight: bold; font-size: 15px;">
+                <div style="color:#ff5252;">좌 <br><span id="resLeft" style="font-size:22px;">0</span></div>
+                <div style="color:#f39c12;">중 <br><span id="resMid" style="font-size:22px;">0</span></div>
+                <div style="color:#2ed573;">우 <br><span id="resRight" style="font-size:22px;">0</span></div>
+            </div>
+            <p id="resultMsg" style="font-size:15px; color:#666; margin:10px 0 20px 0; line-height:1.5; font-weight: bold;"></p>
+            
+            <button class="btn-main btn-submit" onclick="sendDataToGoogleForm()">📊 학습 결과 전송하기</button>
+            <div id="resultActionBtns" style="display:flex; flex-direction:column; gap:8px; margin-top: 10px;"></div>
+        </div>
+
+        <div id="historyModal" class="modal-content hidden">
+            <h2 style="color:#333; margin-bottom: 15px; font-size: 22px;">내 학습 기록</h2>
+            <div class="table-responsive">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th style="min-width:60px;">단원/일시</th>
+                            <th>1차</th>
+                            <th>2차</th>
+                            <th>3차</th>
+                            <th>4차</th>
+                            <th style="min-width:50px;">총시간</th>
+                            <th style="min-width:110px;">3/4차 오답<br>(어휘|뜻)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyList"></tbody>
+                </table>
+            </div>
+            
+            <button class="btn-main btn-submit" onclick="sendDataToGoogleForm()" style="width: 90%; margin: 0 auto 10px;">📊 현재 기록 원장님께 전송하기</button>
+            <button class="btn-main btn-export" style="width: 90%; margin: 0 auto 10px; background:#34495e;" onclick="exportToCSV()">엑셀(CSV) 백업 다운로드</button>
+            <div style="display: flex; gap: 10px; width: 90%; margin: 0 auto;">
+                <button class="btn-main btn-danger" style="margin-top: 0;" onclick="clearAllHistory()">기록 초기화</button>
+                <button class="btn-main btn-gray" style="margin-top: 0;" onclick="closeHistory()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="top-panel">
+        <div class="control-row">
+            <select id="chapterSelect" onchange="handleChapterChange(event)"><option value="01강">01강</option><option value="02강">02강</option><option value="03강">03강</option><option value="04강">04강</option><option value="05강">05강</option><option value="06강">06강</option><option value="07강">07강</option><option value="08강">08강</option><option value="09강">09강</option><option value="10강">10강</option><option value="11강">11강</option><option value="12강">12강</option><option value="13강">13강</option><option value="14강">14강</option><option value="15강">15강</option><option value="16강">16강</option><option value="17강">17강</option><option value="18강">18강</option><option value="19강">19강</option><option value="20강">20강</option><option value="21강">21강</option><option value="22강">22강</option><option value="23강">23강</option><option value="24강">24강</option><option value="25강">25강</option><option value="26강">26강</option><option value="27강">27강</option><option value="28강">28강</option></select>
+            <select id="fontSizeLevel" onchange="updateUI()">
+                <option value="0.7">소</option>
+                <option value="0.9">중</option>
+                <option value="1.1" selected="">대 (기본)</option>
+                <option value="1.4">특대</option>
+                <option value="1.7">초대</option>
+            </select>
+            <button class="btn-panel upload" id="btnUpload" onclick="triggerCsvUpload()">업로드</button>
+        </div>
+        <div class="control-row">
+            <div class="lang-options">
+                <label><input type="radio" name="topLang" value="en2ko" onchange="syncLangAndUpdate()" checked=""> 어휘➔뜻</label>
+                <label><input type="radio" name="topLang" value="ko2en" onchange="syncLangAndUpdate()"> 뜻➔어휘</label>
+            </div>
+            <div class="panel-btns">
+                <button class="btn-panel" onclick="showHistory()">기록보기</button>
+                <button class="btn-panel primary" onclick="showStartModal()">처음으로</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-header">
+        <div class="mode-title" id="modeTitle">모드 선택</div>
+        <div class="status-info-row">
+            <div class="badge-group">
+                <div class="progress-badge badge-default" id="cycleBadge" style="display: none;">1회독</div>
+                <div class="progress-badge badge-default" id="progressText">0 / 0</div>
+            </div>
+            <div class="stopwatch-badge" id="stopwatchDisplay" style="display:block;">⏱ 00:00</div>
+        </div>
+    </div>
+    
+    <div class="timer-container" id="timerContainer"><div class="timer-bar" id="timerBar"></div></div>
+    
+    <div class="dashboard" id="mainDash">
+        <div class="box-status box-left">모름 <span id="cntLeft">0</span></div>
+        <div class="box-status box-mid">지연 <span id="cntMid">0</span></div>
+        <div class="box-status box-right">완벽 <span id="cntRight">0</span></div>
+    </div>
+
+    <div class="main-area-wrapper">
+        <div class="main-area" id="mainArea">
+            <div class="swipe-wrapper" id="swipeWrapper">
+                <div class="card" id="wordCard">
+                    <div class="card-face" id="cardFront"><div class="text-container" id="frontText"></div><div class="guide-text" id="frontGuide">터치하여 확인</div></div>
+                    <div class="card-face card-back"><div class="text-container" id="backText"></div><div class="guide-text" id="backGuide">밀어서 분류하세요</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="academy-logo">미사이든학원</div>
+    </div>
+    
+    <div class="swipe-info-guide" id="swipeInfoGuide">
+        <div class="guide-item" style="color:#ff5252;"><span>←</span><span>모름 / 틀림</span></div>
+        <div class="guide-item" style="color:#f39c12;"><span>↑</span><span>1~3초 걸림</span></div>
+        <div class="guide-item" style="color:#2ed573;"><span>→</span><span>0.5초 컷!</span></div>
+    </div>
+</div>
+
+<script>
+    /* =======================================================
+       🌟 환경 변수 및 구글 시트 인증 설정
+       ======================================================= */
+    const EMBEDDED_DATA = [{"chapter":"01강","word":"강호","hanja":"강 江, 호수 湖","meaning":"① 강과 호수를 아우러 일컫는 말. ② 예전에, 은자(隱者)나 시인(詩人), 묵객(墨客) 등이 현실을 도피하여 생활하던 시골이나 자연."},{"chapter":"01강","word":"홍진","hanja":"붉을 紅, 티끌 塵","meaning":"① 거마(車馬)가 일으키는 먼지. ② 번거롭고 속된 세상을 비유적으로 이르는 말."},{"chapter":"01강","word":"매화","hanja":"매화나무 梅, 꽃 花","meaning":"매실나무의 꽃."},{"chapter":"01강","word":"삭풍","hanja":"초하루 朔, 바람 風","meaning":"겨울철에 북쪽에서 불어오는 찬 바람."},{"chapter":"01강","word":"경물","hanja":"경치 景, 사물 物","meaning":"계절에 따라 달라지는 경치."},{"chapter":"01강","word":"삼공","hanja":"석 三, 벼슬 公","meaning":"① 고려 시대에, 태위(太尉)·사도(司徒)·사공(司空)의 세 벼슬을 통틀어 이르던 말. ② 의정부에서 국가 주요 정책을 결정하는 일을 맡아보던 세 벼슬. 영의정, 좌의정, 우의정을 이른다."},{"chapter":"01강","word":"무릉도원","hanja":"굳셀 武, 큰 언덕 陵, 복숭아나무 桃, 근원 源","meaning":"도연명의 「도화원기」에 나오는 말로, ‘이상향’, ‘별천지’를 비유적으로 이르는 말."},{"chapter":"01강","word":"풍월","hanja":"바람 風, 달 月","meaning":"① 맑은 바람과 밝은 달. ② 맑은 바람과 밝은 달을 대상으로 시를 짓고 흥취를 자아내어 즐겁게 놂."},{"chapter":"01강","word":"연하","hanja":"안개 煙, 노을 霞","meaning":"① 안개와 노을을 아울러 이르는 말. ② 고요한 산수의 경치를 비유적으로 이르는 말."},{"chapter":"01강","word":"조물주","hanja":"지을 造, 만물 物, 주인 主","meaning":"우주의 만물을 만들고 다스리는 신."},{"chapter":"02강","word":"성현","hanja":"성인 聖, 어질 賢","meaning":"지혜롭고 현명하며 인격이 훌륭하여 많은 사람이 본받을 만한 사람."},{"chapter":"02강","word":"만고","hanja":"일만 萬, 옛 古","meaning":"아주 오랜 세월 동안."},{"chapter":"02강","word":"빈천","hanja":"가난할 貧, 천할 賤","meaning":"가난하고 천함."},{"chapter":"02강","word":"부용장","hanja":"연꽃 芙, 연꽃 蓉, 장막 帳","meaning":"부용을 그리거나 수놓은 발장(房帳)."},{"chapter":"02강","word":"군은","hanja":"임금 君, 은혜 恩","meaning":"임금의 은혜."},{"chapter":"02강","word":"호걸","hanja":"호걸 豪, 뛰어날 傑","meaning":"지혜와 용기가 뛰어나고 기개와 풍모가 있는 사람."},{"chapter":"02강","word":"금수","hanja":"날짐승 禽, 길짐승 獸","meaning":"① 날짐승과 길짐승이라는 뜻으로, 모든 짐승을 이르는 말. ② 행실이 아주 더럽고 나쁜 사람을 비유적으로 이르는 말."},{"chapter":"02강","word":"오경","hanja":"다섯 五, 고칠 更","meaning":"하룻밤을 다섯 부분으로 나누었을 때 맨 마지막 부분. 새벽 세 시에서 다섯 시 사이이다."},{"chapter":"02강","word":"간장","hanja":"간 肝, 창자 腸","meaning":"① 간과 창자. ② ‘애’나 ‘마음’을 비유적으로 이르는 말."},{"chapter":"02강","word":"춘궁","hanja":"봄 春, 대궐 宮","meaning":"‘황태자’나 ‘왕세자’를 달리 이르던 말."},{"chapter":"03강","word":"격정","hanja":"과격할 激, 뜻 情","meaning":"강렬하고 갑작스러워 누르기 어려운 감정."},{"chapter":"03강","word":"신명","hanja":"","meaning":"흥겨운 신이나 멋."},{"chapter":"03강","word":"애달프다","hanja":"","meaning":"① 마음이 안타깝거나 쓰라리다. ② 애처롭고 쓸쓸하다."},{"chapter":"03강","word":"자조하다","hanja":"스스로 自, 비웃을 嘲","meaning":"자기를 비웃다."},{"chapter":"03강","word":"황량하다","hanja":"거칠 荒, 서늘할 ?","meaning":"황폐하여 거칠고 쓸쓸하다."},{"chapter":"03강","word":"동경하다","hanja":"그리워할 憧, 그리워할 憬","meaning":"어떤 것을 간절히 그리워하여 그것만을 생각함."},{"chapter":"03강","word":"경외감","hanja":"공경할 敬, 두려워할 畏, 느낄 感","meaning":"공경하면서 두려워하는 감정."},{"chapter":"03강","word":"간구하다","hanja":"간절할 懇, 구할 求","meaning":"간절히 바라다."},{"chapter":"03강","word":"응시하다","hanja":"집중할 凝, 볼 視","meaning":"눈길을 모아 한 곳을 똑바로 바라보다."},{"chapter":"03강","word":"관조적","hanja":"볼 觀, 비출 照, 어조사 的","meaning":"고요한 마음으로 사물이나 현상을 관찰하거나 비추어 보는 (것)."},{"chapter":"04강","word":"심연","hanja":"깊을 深, 못 淵","meaning":"① 깊은 못. ② 좀처럼 빠져나오기 힘든 구렁을 비유적으로 이르는 말."},{"chapter":"04강","word":"객지","hanja":"손님 客, 땅 地","meaning":"자기 집을 멀리 떠나 임시로 있는 곳."},{"chapter":"04강","word":"성찰","hanja":"살필 省, 살필 察","meaning":"자기의 마음을 반성하고 살핌."},{"chapter":"04강","word":"치욕","hanja":"부끄러워할 恥, 욕될 辱","meaning":"수치와 욕됨."},{"chapter":"04강","word":"호명","hanja":"부를 呼, 이름 名","meaning":"이름을 부름."},{"chapter":"04강","word":"병치","hanja":"나란히 竝, 둘 置","meaning":"두 가지 이상의 것을 한곳에 나란히 두거나 설치함."},{"chapter":"04강","word":"부재하다","hanja":"아닐 不, 있을 在","meaning":"그곳에 있지 아니하다."},{"chapter":"04강","word":"모색하다","hanja":"찾을 摸, 찾을 索","meaning":"일이나 사건 따위를 해결할 수 있는 방법이나 실마리를 더듬어 찾음."},{"chapter":"04강","word":"표상하다","hanja":"겉 表, 형상 象","meaning":"추상적이거나 드러나지 아니한 것을 구체적인 형상으로 드러내어 나타냄."},{"chapter":"04강","word":"투영하다","hanja":"던질 投, 그림자 影","meaning":"① 물체의 그림자를 어떤 물체 위에 비춤. ② (비유적으로) 어떤 일을 다른 일에 반영하여 나타냄."},{"chapter":"05강","word":"조정","hanja":"아침 朝, 조정 廷","meaning":"임금이 나라의 정치를 신하들과 의논하거나 집행하는 곳. 또는 그런 기구."},{"chapter":"05강","word":"규중","hanja":"도장방 閨, 가운데 中","meaning":"부녀자가 거처하는 곳."},{"chapter":"05강","word":"배설하다","hanja":"늘어설 排, 베풀 設","meaning":"연회나 의식(儀式)에 물건을 차려 놓다."},{"chapter":"05강","word":"행장","hanja":"다닐 行, 꾸밀 裝","meaning":"여행할 때 쓰는 물건과 차림."},{"chapter":"05강","word":"시비","hanja":"모실 侍, 계집종 婢","meaning":"곁에서 시중을 드는 계집종."},{"chapter":"05강","word":"재배하다","hanja":"다시 再, 절 拜","meaning":"두 번 절하다."},{"chapter":"05강","word":"주렴","hanja":"구슬 珠, 발 簾","meaning":"구슬 따위를 꿰어 만든 발."},{"chapter":"05강","word":"각설","hanja":"물리칠 却, 말씀 說","meaning":"말이나 글 따위에서, 이제까지 다루던 내용을 그만두고 화제를 다른 쪽으로 돌림."},{"chapter":"05강","word":"소저","hanja":"작을 小, 누이 姐","meaning":"‘아가씨’를 한문 투로 이르는 말."},{"chapter":"05강","word":"귀양","hanja":"","meaning":"고려·조선 시대에, 죄인을 먼 시골이나 섬으로 보내어 일정한 기간 동안 제한된 곳에서만 살게 하던 형벌."},{"chapter":"06강","word":"원수","hanja":"으뜸 元, 장수 帥","meaning":"군대에서 가장 높은 계급. 또는 그 계급의 사람."},{"chapter":"06강","word":"반공","hanja":"반 判, 빌 空","meaning":"땅으로부터 그리 높지 아니한 허공."},{"chapter":"06강","word":"심복","hanja":"마음 心, 배 腹","meaning":"마음 놓고 부리거나 일을 맡길 수 있는 사람."},{"chapter":"06강","word":"적강","hanja":"귀양갈 謫, 내릴 降","meaning":"신선이 인간 세상에 내려오거나 사람으로 태어남."},{"chapter":"06강","word":"계교","hanja":"꾀할 計, 공교할 巧","meaning":"요리조리 헤아려 보고 생각해 낸 꾀."},{"chapter":"06강","word":"만조백관","hanja":"가득할 滿, 조정 朝, 일백 百, 벼슬 官","meaning":"조정의 모든 벼슬아치."},{"chapter":"06강","word":"도술","hanja":"길 道, 재주 術","meaning":"도를 닦아 여러 가지 조화를 부리는 요술이나 술법."},{"chapter":"06강","word":"희롱하다","hanja":"놀 ?, 희롱할 弄","meaning":"① 말이나 행동으로 실없어 놀리다. ② 손아귀에 넣고 제멋대로 가지고 놀다."},{"chapter":"06강","word":"속절없다","hanja":"","meaning":"단념할 수밖에 달리 어찌할 도리가 없다."},{"chapter":"06강","word":"신이하다","hanja":"귀신 神, 기이할 異","meaning":"신기하고 이상하다."},{"chapter":"07강","word":"순사","hanja":"돌 巡, 조사할 査","meaning":"일제 강점기에 둔, 경찰관의 가장 낮은 계급. 또는 그 계급의 사람."},{"chapter":"07강","word":"세간","hanja":"","meaning":"집안 살림에 쓰는 온갖 물건."},{"chapter":"07강","word":"과도기","hanja":"지날 過, 건널 渡, 기간 期","meaning":"한 상태에서 다른 새로운 상태로 옮아가거나 바뀌어 가는 도중의 시기."},{"chapter":"07강","word":"작인","hanja":"지을 作, 사람 人","meaning":"다른 사람의 농지를 빌려 농사를 짓고 그 대가로 사용료를 지급하는 사람."},{"chapter":"07강","word":"전장","hanja":"싸울 戰, 마당 場","meaning":"싸움을 치르는 장소."},{"chapter":"07강","word":"구호소","hanja":"구원할 救, 보호할 護, 곳 所","meaning":"재해나 재난 따위로 어려움에 처한 사람을 돕는 일을 맡아보는 곳."},{"chapter":"07강","word":"신원","hanja":"몸 身, 근원 元","meaning":"개인의 성장 과정과 관련된 자료."},{"chapter":"07강","word":"매개물","hanja":"중매 媒, 끼일 介, 물건 物","meaning":"둘 사이에서 양편의 관계를 맺어 주는 물건."},{"chapter":"07강","word":"급사","hanja":"줄 給, 섬길 仕","meaning":"관청이나 회사, 가게 따위에서 잔심부름을 시키기 위하여 부리는 사람."},{"chapter":"07강","word":"연명하다","hanja":"이을 延, 목숨 命","meaning":"목숨을 겨우 이어 살아가다."},{"chapter":"08강","word":"도회","hanja":"도읍 都, 모일 會","meaning":"사람이 많이 살고 상공업이 발달한 번잡한 지역."},{"chapter":"08강","word":"신작로","hanja":"새로울 新, 지을 作, 길 路","meaning":"새로 만든 길이라는 뜻으로, 자동차가 다닐 수 있을 정도로 넓게 새로 낸 길을 이르는 말."},{"chapter":"08강","word":"세태","hanja":"세대 世, 모양 態","meaning":"사람들의 일상생활, 풍습 따위에서 보이는 세상의 상태나 형편."},{"chapter":"08강","word":"생경하다","hanja":"날 生, 굳을 硬","meaning":"익숙하지 않아 어색하다."},{"chapter":"08강","word":"속물적","hanja":"풍속 俗, 사물 物, 어조사 的","meaning":"교양이 없거나 식견이 좁고 세속적인 일에만 신경을 쓰는 (것)."},{"chapter":"08강","word":"소외","hanja":"소통할 疏, 바깥 外","meaning":"어떤 무리에서 기피하여 따돌리거나 멀리함."},{"chapter":"08강","word":"소시민","hanja":"작을 小, 시 시 市, 백성 民","meaning":"노동자와 자본가의 중간 계급에 속하는 소상인, 수공업자, 하급 봉급생활자, 하급 공무원 따위를 통틀어 이르는 말."},{"chapter":"08강","word":"배회하다","hanja":"노닐 徘, 노닐 徊","meaning":"아무 목적도 없이 어떤 곳을 중심으로 어슬렁거리며 이리저리 돌아다니다."},{"chapter":"08강","word":"반감","hanja":"반대할 反, 느낄 感","meaning":"반대하거나 반항하는 감정."},{"chapter":"08강","word":"조명하다","hanja":"비출 照, 밝을 明","meaning":"① 광선으로 밝게 비추다. ② 어떤 대상을 일정한 관점으로 바라보다."},{"chapter":"09강","word":"이치","hanja":"도리 理, 이를 致","meaning":"사물의 정당한 조리(條理). 또는 도리에 맞는 취지."},{"chapter":"09강","word":"지각","hanja":"알 知, 깨달을 覺","meaning":"감각 기관을 통하여 대상을 인식함. 또는 그런 작용."},{"chapter":"09강","word":"본성","hanja":"근본 本, 성품 性","meaning":"사물이나 현상에 본디부터 있는 고유한 특성."},{"chapter":"09강","word":"가변성","hanja":"옳을 可, 변할 變, 성품 性","meaning":"일정한 조건에서 변할 수 있는 성질."},{"chapter":"09강","word":"명제","hanja":"목숨 命, 제목 題","meaning":"어떤 문제에 대한 하나의 논리적 판단 내용과 주장을 언어 또는 기호로 표시한 것."},{"chapter":"09강","word":"척도","hanja":"자 尺, 법도 度","meaning":"평가하거나 측정할 때 의거할 기준."},{"chapter":"09강","word":"상충","hanja":"서로 相, 부딪힐 衝","meaning":"맞지 아니하고 서로 어긋남."},{"chapter":"09강","word":"욕망","hanja":"하고자 할 欲, 바랄 望","meaning":"부족을 느껴 무엇을 가지거나 누리고자 함. 또는 그런 마음."},{"chapter":"09강","word":"필연적","hanja":"반드시 必, 그럴 然, 어조사 的","meaning":"사물의 관련이나 일의 결과가 반드시 그렇게 될 수밖에 없는 (것)."},{"chapter":"09강","word":"간주하다","hanja":"볼 看, 지을 做","meaning":"상태, 모양, 성질 따위가 그와 같다고 보거나 그렇다고 여기다."},{"chapter":"10강","word":"논증","hanja":"논할 論, 증거 證","meaning":"옳고 그름을 이유를 들어 밝힘. 또는 그 근거나 이유."},{"chapter":"10강","word":"상정하다","hanja":"생각 想, 정할 定","meaning":"어떤 정황을 가정적으로 생각하여 단정하다."},{"chapter":"10강","word":"범주","hanja":"법 範, 이랑 疇","meaning":"동일한 성질을 가진 부류나 범위."},{"chapter":"10강","word":"유입","hanja":"흐를 流, 들 入","meaning":"돈, 물품 따위의 재화가 들어옴."},{"chapter":"10강","word":"수양","hanja":"닦을 修, 기를 養","meaning":"몸과 마음을 갈고닦아 품성이나 지식, 도덕 따위를 높은 경지로 끌어올림."},{"chapter":"10강","word":"사료","hanja":"역사 史, 재료 料","meaning":"역사 연구에 필요한 문헌이나 유물."},{"chapter":"10강","word":"관료","hanja":"벼슬 官, 동료 僚","meaning":"직업적인 관리. 또는 그들의 집단."},{"chapter":"10강","word":"세습","hanja":"세대 世, 물려받을 襲","meaning":"한집안의 재산이나 신분, 직업 따위를 대대로 물려주고 물려받음."},{"chapter":"10강","word":"천명","hanja":"하늘 天, 명령 命","meaning":"하늘의 명령."},{"chapter":"10강","word":"내재하다","hanja":"안 內, 있을 在","meaning":"어떤 사물이나 범위의 안에 들어 있다."},{"chapter":"11강","word":"고양하다","hanja":"높을 高, 오를 揚","meaning":"① 높이 쳐들어 올리다. ② 정신이나 기분 따위를 북돋워서 높이다."},{"chapter":"11강","word":"국한","hanja":"판 局, 한계 限","meaning":"범위를 일정한 부분에 한정함."},{"chapter":"11강","word":"도출하다","hanja":"이끌 導, 날 出","meaning":"판단이나 결론 따위를 이끌어 내다."},{"chapter":"11강","word":"대면하다","hanja":"대할 對, 얼굴 面","meaning":"서로 얼굴을 마주 보고 대하다."},{"chapter":"11강","word":"대변하다","hanja":"대신할 代, 말 잘할 辯","meaning":"① 어떤 사람이나 단체를 대신하여 그의 의견이나 태도를 표하다. ② 어떤 사실이나 의미를 대표적으로 나타내다."},{"chapter":"11강","word":"부여하다","hanja":"붙을 附, 줄 與","meaning":"사람에게 권리·명예·임무 따위를 지니도록 해 주거나, 사물이나 일에 가치·의의 따위를 붙여 주다."},{"chapter":"11강","word":"외연","hanja":"바깥 外, 늘일 延","meaning":"일정한 개념이 적용되는 사물의 전 범위."},{"chapter":"11강","word":"기괴하다","hanja":"기이할 奇, 괴상할 怪","meaning":"외관이나 분위기가 괴상하고 기이하다."},{"chapter":"11강","word":"포착","hanja":"잡을 捕, 잡을 捉","meaning":"① 꼭 붙잡음. ② 요점이나 요령을 얻음. ③ 어떤 기회나 정세를 알아차림."},{"chapter":"12강","word":"유파","hanja":"흐를 流, 갈래 派","meaning":"주로 학계나 예술계에서, 생각이나 방법 경향이 비슷한 사람이 모여서 이룬 무리."},{"chapter":"12강","word":"질감","hanja":"바탕 質, 느낄 感","meaning":"① 재질의 차이에서 받는 느낌. ② 물감, 캔버스, 필촉, 화구 따위가 만들어 내는 화면 대상의 느낌."},{"chapter":"12강","word":"유리되다","hanja":"흩어질 遊, 떠날 離","meaning":"따로 떨어지게 되다."},{"chapter":"12강","word":"미시사","hanja":"적을 微, 볼 視, 역사 史","meaning":"전체적인 면에서가 아니라 개별적으로 포착하여 아주 작은 사실들을 파헤치는 역사."},{"chapter":"12강","word":"통시적","hanja":"꿰뚫을 通, 때 時, 어조사 的","meaning":"어떤 시기를 종적으로 바라보는 (것)."},{"chapter":"12강","word":"이질적","hanja":"다를 異, 바탕 質, 어조사 的","meaning":"성질이 다른 (것)."},{"chapter":"12강","word":"재현하다","hanja":"다시 再, 나타낼 現","meaning":"다시 나타나다. 또는 다시 나타내다."},{"chapter":"12강","word":"비정형성","hanja":"아닐 非, 정할 定, 본 型, 성질 性","meaning":"일정한 형식이나 틀을 띠지 않는 성질."},{"chapter":"12강","word":"사유하다","hanja":"생각 思, 생각할 惟","meaning":"① 대상을 두루 생각하다. ② 개념, 구성, 판단, 추리 따위를 행하는 인간의 이성 작용을 하다."},{"chapter":"13강","word":"금리","hanja":"돈 金, 이자 利","meaning":"빌려준 돈이나 예금 따위에 붙는 이자. 또는 그 비율."},{"chapter":"13강","word":"통화","hanja":"통할 通, 재화 貨","meaning":"유통 수단이나 지불 수단으로서 기능하는 화폐."},{"chapter":"13강","word":"환율","hanja":"바꿀 換, 비율 率","meaning":"자기 나라 돈과 다른 나라 돈의 교환 비율."},{"chapter":"13강","word":"수요","hanja":"구할 需, 요구할 要","meaning":"어떤 재화나 용역을 일정한 가격으로 사려고 하는 욕구."},{"chapter":"13강","word":"내수","hanja":"안 內, 구할 需","meaning":"국내에서의 수요(需要)."},{"chapter":"13강","word":"재화","hanja":"재물 財, 재물 貨","meaning":"사람이 바라는 바를 충족시켜 주는 모든 물건."},{"chapter":"13강","word":"채권","hanja":"빚 債, 문서 券","meaning":"① 남에게 빌린 돈의 금액을 적는 장부. ② 국가, 지방 자치 단체, 은행, 회사 따위가 사업에 필요한 자금을 차입하기 위하여 발행하는 유가 증권. 공채, 국채, 사채, 지방채 따위가 있다."},{"chapter":"14강","word":"임의","hanja":"맡길 任, 뜻 意","meaning":"① 일정한 기준이나 원칙 없이 하고 싶은 대로 함. ② 대상이나 장소 따위를 일정하게 정하지 아니함."},{"chapter":"14강","word":"채무","hanja":"빚 債, 힘쓸 務","meaning":"재산권의 하나. 특정인이 다른 특정인에게 어떤 행위를 하여야 할 의무를 이른다."},{"chapter":"14강","word":"증여","hanja":"줄 贈, 줄 與","meaning":"① 물품 따위를 선물로 줌. ② 당사자의 일방이 자기의 재산을 무상으로 상대편에게 줄 의사를 표시하고 상대편이 이를 승낙함으로써 성립하는 계약."},{"chapter":"14강","word":"일의적","hanja":"하나 一, 옳을 義, 어조사 的","meaning":"① 가장 중요한 의미를 갖는 (것). ② 뜻이나 결과가 같은 (것)."},{"chapter":"14강","word":"촉진하다","hanja":"재촉할 促, 나아갈 進","meaning":"다그쳐 빨리 나아가게 하다."},{"chapter":"14강","word":"도외시하다","hanja":"법도 度, 바깥 外, 볼 視","meaning":"상관하지 아니하거나 무시하다."},{"chapter":"14강","word":"공시","hanja":"공적일 公, 보일 示","meaning":"① 일정한 내용을 공개적으로 게시하여 일반에게 널리 알림. 또는 그렇게 알리는 글. ② 공공 기관이 권리의 발생, 변경, 소멸 따위의 내용을 공개적으로 게시하여 일반에게 널리 알림. 또는 그렇게 알리는 글. ③ 점유는 소유자를 공시하는 기능도 수행한다."},{"chapter":"14강","word":"위임하다","hanja":"맡길 委, 맡길 任","meaning":"① 어떤 일을 책임 지워 맡기다. ② 당사자 중 한쪽이 상대편에게 사무 처리를 맡기고 상대편은 이를 승낙하다."},{"chapter":"15강","word":"회의적","hanja":"품을 懷, 의심 疑, 어조사 的","meaning":"어떤 일에 의심을 품는 (것)."},{"chapter":"15강","word":"의례","hanja":"법식 儀, 예절 禮","meaning":"행사를 치르는 일정한 법식. 또는 정하여진 방식에 따라 치르는 행사."},{"chapter":"15강","word":"통찰","hanja":"꿰뚫을 洞, 살필 察","meaning":"예리한 관찰력으로 사물을 꿰뚫어 봄."},{"chapter":"15강","word":"규율하다","hanja":"법칙 規, 법칙 律","meaning":"질서나 제도를 좇아 다스리다."},{"chapter":"15강","word":"시사하다","hanja":"보일 示, 부추길 唆","meaning":"어떤 것을 미리 간접적으로 표현해 주다."},{"chapter":"15강","word":"단행하다","hanja":"끊을 斷, 행할 行","meaning":"결단하여 실행하다."},{"chapter":"15강","word":"구별되다","hanja":"나눌 區, 나눌 別","meaning":"성질이나 종류에 따라 차이가 나다."},{"chapter":"15강","word":"향유하다","hanja":"누릴 享, 가질 有","meaning":"누리어 가지다."},{"chapter":"16강","word":"자의적","hanja":"방자할 恣, 뜻 意, 어조사 的","meaning":"일정한 질서를 무시하고 제멋대로 하는 (것)."},{"chapter":"16강","word":"탄력성","hanja":"탄알 彈, 힘 力, 성질 性","meaning":"원인 변수의 값이 1% 변할 때, 그 영향을 받는 변수가 몇 퍼센트나 변하는지를 나타내는 척도."},{"chapter":"16강","word":"부동산","hanja":"아닐 不, 움직일 動, 낳을 産","meaning":"부동산. 토지나 건물, 수목 따위이다."},{"chapter":"16강","word":"저해하다","hanja":"막을 沮, 해할 害","meaning":"막아서 못 하도록 해치다."},{"chapter":"16강","word":"점유하다","hanja":"점령할 占, 있을 有","meaning":"물건이나 영역, 지위 따위를 차지하다."},{"chapter":"16강","word":"편향되다","hanja":"치우칠 偏, 향할 向","meaning":"한쪽으로 치우치게 되다."},{"chapter":"16강","word":"기인하다","hanja":"일어날 起, 원인 因","meaning":"어떠한 것에 원인을 두다."},{"chapter":"16강","word":"와해되다","hanja":"기와 瓦, 쪼갤 解","meaning":"조직이나 계획 따위가 산산이 무너지고 흩어지게 되다. 기와가 깨진다는 뜻에서 나온 말이다."},{"chapter":"17강","word":"거시 세계","hanja":"클 巨, 볼 視, 세상 世, 지경 界","meaning":"눈으로 볼 수 있는 세계. 또는 감각으로 직접 알 수 있는 세계."},{"chapter":"17강","word":"전자","hanja":"전기 電, 아들 子","meaning":"음전하를 가지고 원자핵의 주위를 도는 소립자의 하나."},{"chapter":"17강","word":"자기장","hanja":"자석 磁, 기운 氣, 마당 場","meaning":"자석의 주위, 전류의 주위, 지구의 표면 따위와 같이 자기력이 작용이 미치는 공간."},{"chapter":"17강","word":"주파수","hanja":"두루 周, 파동 波, 수량 數","meaning":"전파나 음파가 1초 동안에 진동하는 횟수."},{"chapter":"17강","word":"인과성","hanja":"원인 因, 결과 果, 성질 性","meaning":"둘이나 그 이상의 존재 사이에 원인과 결과로서 맺어지는 관계."},{"chapter":"17강","word":"행성","hanja":"다닐 行, 별 星","meaning":"중심 별이 강하게 끌어당기는 힘 때문에 타원형의 궤도를 그리며 중심 별의 주위를 도는 천체."},{"chapter":"17강","word":"공전","hanja":"공평할 公, 회전할 轉","meaning":"한 천체가 다른 천체의 둘레를 주기적으로 도는 일. 행성이 태양의 둘레를 돌거나 위성이 행성의 둘레를 도는 따위를 이른다."},{"chapter":"17강","word":"유기적","hanja":"있을 有, 틀 機, 어조사 的","meaning":"생물체처럼 전체를 구성하고 있는 각 부분이 서로 밀접하게 관련을 가지고 있어서 떼어 낼 수 없는 (것)."},{"chapter":"18강","word":"항상성","hanja":"항상 恒, 일정할 恒, 성질 性","meaning":"생체가 여러 가지 환경 변화에 대응하여 생명 현상이 제대로 일어날 수 있도록 일정한 상태를 유지하는 성질. 또는 그런 현상."},{"chapter":"18강","word":"산화","hanja":"초 酸, 될 化","meaning":"① 어떤 원자, 분자, 이온 따위가 전자를 잃는 일. ② 물질 중에 있는 어떤 원자의 산화수가 증가하는 일. ③ 어떤 물질이 산소와 결합하거나 수소를 잃는 일."},{"chapter":"18강","word":"항원","hanja":"막을 抗, 근원 原","meaning":"생체 속에 침입하여 항체를 형성하게 하는 단백성 물질. 세균이나 독소 따위가 있다."},{"chapter":"18강","word":"교란하다","hanja":"어지러울 攪, 어지러울 亂","meaning":"마음이나 상황 따위를 뒤흔들어 놓아 어지럽고 혼란하게 하다."},{"chapter":"18강","word":"침착되다","hanja":"잠길 沈, 붙을 著","meaning":"밑으로 가라앉아 들러붙게 되다."},{"chapter":"18강","word":"응고","hanja":"엉길 凝, 굳을 固","meaning":"액체 따위가 엉겨서 뭉쳐 딱딱하게 굳어짐."},{"chapter":"18강","word":"이온","hanja":"ion","meaning":"전하를 띠는 원자 또는 원자단. 전기적으로 중성인 원자가 전자를 잃으면 양전하를, 전자를 얻게 되면 음전하를 가진 이온이 된다."},{"chapter":"18강","word":"발산되다","hanja":"일어날 發, 흩어질 散","meaning":"① 감정 따위가 밖으로 드러나 해소되다. 또는 분위기 따위가 한껏 드러나다. ② 냄새, 빛, 열 따위가 사방으로 퍼져 나가다."},{"chapter":"18강","word":"시료","hanja":"시험 試, 헤아릴 料","meaning":"시험, 검사, 분석 따위에 쓰는 물질이나 생물."},{"chapter":"19강","word":"프로토콜","hanja":"protocol","meaning":"컴퓨터와 컴퓨터 사이, 또는 한 장치와 다른 장치 사이에서 데이터를 원활히 주고받기 위하여 약속한 여러 가지 규약(規約)."},{"chapter":"19강","word":"클라이언트","hanja":"client","meaning":"서버 시스템과 연결하여 주된 작업이나 정보를 서버에게 요청하고 그 결과를 돌려받는 컴퓨터 시스템."},{"chapter":"19강","word":"비트","hanja":"bit","meaning":"정보량의 최소 기본 단위. 1비트는 이진수 체계(0, 1)의 한 자리로, 8비트는 1바이트이다."},{"chapter":"19강","word":"데이터","hanja":"data","meaning":"컴퓨터가 처리할 수 있는 문자, 숫자, 소리, 그림 따위의 형태로 된 정보."},{"chapter":"19강","word":"메타버스","hanja":"metaverse","meaning":"웹상에서 아바타를 이용하여 사회, 경제, 문화적 활동을 하는 따위처럼 가상 세계와 현실 세계의 경계가 허물어지는 것을 이르는 말."},{"chapter":"19강","word":"식별하다","hanja":"알 識, 다를 別","meaning":"분별하여 알아보다."},{"chapter":"19강","word":"출력","hanja":"나갈 出, 힘 力","meaning":"컴퓨터 따위의 기기(機器)나 장치가 입력을 받아 일을 하고 외부로 결과를 내는 일. 또는 그 결과."},{"chapter":"20강","word":"디지털","hanja":"digital","meaning":"시간, 소리, 세기 등과 같은 세상의 모든 현상을 수치로 바꾸어 나타내는 것."},{"chapter":"20강","word":"화소","hanja":"그림 畵, 바탕 素","meaning":"텔레비전이나 사진 전송에서, 화면을 전기적으로 분해한 최소의 단위 면적. 영상 전체의 화소 총수는 화질을 비교하는 데 유용하다."},{"chapter":"20강","word":"센서","hanja":"sensor","meaning":"소리·빛·온도·압력 따위를 검출하는 소자(素子). 또는 그 소자를 갖춘 기계 장치."},{"chapter":"20강","word":"송신하다","hanja":"보낼 送, 신호 信","meaning":"주로 전기적 수단을 이용하여 전신이나 전화, 라디오, 텔레비전 방송 따위의 신호를 보내다."},{"chapter":"20강","word":"피사체","hanja":"당할 被, 본뜰 寫, 형체 體","meaning":"사진을 찍는 대상이 되는 물체."},{"chapter":"20강","word":"원근","hanja":"멀 遠, 가까울 近","meaning":"멀고 가까움."},{"chapter":"20강","word":"고안되다","hanja":"헤아릴 考, 생각 案","meaning":"연구하여 새로운 안이 나오다."},{"chapter":"20강","word":"진공","hanja":"참 眞, 빌 空","meaning":"물질이 전혀 존재하지 아니하는 공간."},{"chapter":"21강","word":"구술","hanja":"입 口, 말할 述","meaning":"입으로 말함."},{"chapter":"21강","word":"발화","hanja":"필 發, 말할 화 話","meaning":"소리를 내어 말을 함. 또는 그 말."},{"chapter":"21강","word":"준언어","hanja":"좇을 準, 말 言, 말 語","meaning":"의사소통에서, 언어적 요소와 분리할 수 없으나 발화된 음성 메시지와는 다른 의미를 지닐 수 있는 요소."},{"chapter":"21강","word":"담화 표지","hanja":"말씀 談, 말할 話, 표 標, 기록할 識","meaning":"문장의 내용에 직접적인 영향을 미치지는 않지만 전체적인 분위기나 대화의 최종적인 목적을 달성하고자 문장 간의 응집성을 높이기 위하여 사용하는 표지."},{"chapter":"21강","word":"저하되다","hanja":"낮을 低, 아래 下","meaning":"정도, 수준, 능률 따위가 떨어져 낮아지다."},{"chapter":"21강","word":"여부","hanja":"더불어 與, 아닐 否","meaning":"그러함과 그러하지 아니함."},{"chapter":"21강","word":"재진술","hanja":"다시 再, 늘어놓을 陳, 말할 述","meaning":"앞서 한 말에 대하여 표현을 달리 바꾸어 말함."},{"chapter":"21강","word":"현안","hanja":"매달 懸, 안건 案","meaning":"이전부터 의논하여 오면서도 아직 해결되지 않은 채 남아 있는 문제나 의안."},{"chapter":"21강","word":"반대 신문","hanja":"반대 反, 내릴 對, 물을 訊, 물을 問","meaning":"증인 신문에서, 주신문이 끝난 뒤에 반대 측 당사자가 증인을 상대로 행하는 신문."},{"chapter":"22강","word":"거론하다","hanja":"들 擧, 논의할 論","meaning":"어떤 사항을 논제로 삼아 제기하거나 논의하다."},{"chapter":"22강","word":"과도하다","hanja":"지나칠 過, 정도 度","meaning":"정도에 지나치다."},{"chapter":"22강","word":"미흡하다","hanja":"아닐 未, 화할 洽","meaning":"아직 흡족하지 못하거나 만족스럽지 아니하다."},{"chapter":"22강","word":"관철되다","hanja":"꿸 貫, 통할 徹","meaning":"어려움에도 꺾이지 않고 목적이 기어이 이루어지다."},{"chapter":"22강","word":"독려하다","hanja":"살필 督, 힘쓸 勵","meaning":"감독하며 격려하다."},{"chapter":"22강","word":"순차적","hanja":"순서 順, 버금 次, 어조사 的","meaning":"순서를 따라 차례대로 하는 (것)."},{"chapter":"22강","word":"생소하다","hanja":"날 生, 멀 疏","meaning":"어떤 대상이 친숙하지 못하고 낯이 설다."},{"chapter":"22강","word":"유보하다","hanja":"머무를 留, 보전할 保","meaning":"어떤 일을 당장 처리하지 아니하고 나중으로 미루어 두다."},{"chapter":"22강","word":"환기하다","hanja":"부를 喚, 일어날 起","meaning":"주의나 여론, 생각 따위를 불러일으키다."},{"chapter":"22강","word":"전환하다","hanja":"구를 轉, 바꿀 換","meaning":"다른 방향이나 상태로 바꾸다."},{"chapter":"23강","word":"기여하다","hanja":"부칠 寄, 줄 與","meaning":"도움이 되도록 이바지하다."},{"chapter":"23강","word":"부각하다","hanja":"뜰 浮, 새길 刻","meaning":"어떤 사물을 특징지어 두드러지게 하다."},{"chapter":"23강","word":"부합하다","hanja":"부신 符, 합할 合","meaning":"사물이나 현상이 서로 꼭 들어맞다."},{"chapter":"23강","word":"맥락","hanja":"줄기 脈, 이을 絡","meaning":"사물 따위가 서로 이어져 있는 관계나 연관."},{"chapter":"23강","word":"제안","hanja":"걸 提, 안건 案","meaning":"안이나 의견으로 내놓음. 또는 그 안이나 의견."},{"chapter":"23강","word":"가독성","hanja":"옳을 可, 읽을 讀, 성질 性","meaning":"인쇄물이 얼마나 쉽게 읽히는가 하는 능률의 정도."},{"chapter":"23강","word":"시급성","hanja":"때 時, 급할 急, 성질 性","meaning":"시각을 다툴 만큼 절박하고 급한 상태의 성질."},{"chapter":"23강","word":"당위성","hanja":"마땅할 當, 될 爲, 성질 性","meaning":"마땅히 그렇게 하거나 되어야 할 성질."},{"chapter":"23강","word":"보완하다","hanja":"기울 補, 완전할 完","meaning":"모자라거나 부족한 것을 보충하여 완전하게 하다."},{"chapter":"24강","word":"응집성","hanja":"엉길 凝, 모일 集, 성질 性","meaning":"① 한군데에 엉겨서 뭉치는 성질. ② 글을 이루는 문장들이 형식상 특정한 장치에 의해 연결되는 원리."},{"chapter":"24강","word":"통일성","hanja":"거느릴 統, 하나 一, 성질 性","meaning":"① 다양한 요소들이 있으면서도 전체가 하나로서 파악되는 성질. ② 글의 내용이 하나의 주제로 긴밀하게 연결되는 원리."},{"chapter":"24강","word":"절충안","hanja":"꺾을 折, 속마음 衷, 안건 案","meaning":"두 가지 이상의 안을 서로 보충하여 알맞게 조절한 안."},{"chapter":"24강","word":"비약적","hanja":"날 飛, 뛸 躍, 어조사 의 的","meaning":"지위나 수준 따위가 갑자기 빠른 속도로 높아지거나 향상되는 (것)."},{"chapter":"24강","word":"대체하다","hanja":"대신할 代, 바꿀 替","meaning":"다른 것으로 대신하다."},{"chapter":"24강","word":"염두","hanja":"생각할 念, 머리 頭","meaning":"① 생각의 시초. ② 마음의 속."},{"chapter":"24강","word":"야기하다","hanja":"이끌 惹, 일어날 起","meaning":"일이나 사건 따위를 끌어 일으키다."},{"chapter":"24강","word":"편협하다","hanja":"치우칠 偏, 좁을 狹","meaning":"한쪽으로 치우쳐 도량이 좁고 너그럽지 못하다."},{"chapter":"24강","word":"소원하다","hanja":"멀 疏, 멀 遠","meaning":"지내는 사이가 두텁지 아니하고 거리가 있어서 서먹서먹하다."},{"chapter":"25강","word":"반모음","hanja":"절반 半, 어미 母, 소리 音","meaning":"단독으로 음절을 이루지 못하고 단모음의 앞이나 뒤에 놓여 이중 모음을 형성하는 음소."},{"chapter":"25강","word":"음절","hanja":"소리 音, 마디 節","meaning":"홀로 발음할 수 있는 최소의 단위."},{"chapter":"25강","word":"연음","hanja":"이을 連, 소리 音","meaning":"앞 음절의 끝 자음이 모음으로 시작되는 뒤 음절의 초성으로 이어져 나는 소리."},{"chapter":"25강","word":"자음군","hanja":"아들 子, 소리 音, 무리 群","meaning":"초성이나 종성에 자음이 두 개 이상 무리 지어 나타나는 것."},{"chapter":"25강","word":"동화","hanja":"같을 同, 될 化","meaning":"말소리가 서로 이어질 때, 어느 한쪽 또는 양쪽이 영향을 받아 비슷하거나 같은 소리로 바뀌는 소리의 변화를 이르는 말."},{"chapter":"25강","word":"모음 조화","hanja":"어미 母, 소리 音, 고를 調, 화할 和","meaning":"두 음절 이상의 단어에서, 뒤의 모음이 앞 모음의 영향으로 그와 가깝거나 같은 소리로 되게 되는 언어 현상."},{"chapter":"26강","word":"미지칭","hanja":"아닐 未, 알 知, 일컬을 稱","meaning":"모르는 사물이나 사람을 가리키는 대명사."},{"chapter":"26강","word":"무정물","hanja":"없을 無, 감정 情, 만물 物","meaning":"나무나 돌 따위와 같이 감각이 없는 것."},{"chapter":"26강","word":"상보적","hanja":"서로 相, 도울 補, 성질 的","meaning":"서로 모자란 부분을 보충하는 관계에 있는 (것)."},{"chapter":"26강","word":"객체","hanja":"손님 客, 몸 體","meaning":"문장 내에서 동사의 행위가 미치는 대상."},{"chapter":"26강","word":"함의하다","hanja":"머금을 含, 뜻 意","meaning":"말이나 글 속에 어떠한 뜻을 포함하고 있다."},{"chapter":"26강","word":"호응하다","hanja":"부를 呼, 응할 應","meaning":"① 부름이나 호소 따위에 대답하거나 응하다. ② 「언어」 앞에 어떤 말이 오면 거기에 응하는 말이 따라오다."},{"chapter":"26강","word":"활용","hanja":"살 活, 쓸 用","meaning":"① 도구나 물건 따위를 충분히 잘 이용함. ② 「언어」 용언의 어간이나 서술격 조사에 변하는 말이 붙어 문장의 성격을 바꿈. 또는 그런 일."},{"chapter":"26강","word":"파생","hanja":"갈라질 派, 날 生","meaning":"① 사물이 어떤 근원으로부터 갈려 나와 생김. ② 「언어」 실질 형태소에 접사가 결합하여 하나의 단어를 만듦. 또는 그런 일."},{"chapter":"27강","word":"수사 의문문","hanja":"꾸밀 修, 말 辭, 의심할 疑, 물을 問, 글 ?","meaning":"문장의 형식은 물음을 나타내나 답변을 요구하지 아니하고 강한 긍정 진술과 강한 부정 진술을 내포하고 있는 의문문."},{"chapter":"27강","word":"담화","hanja":"말씀 談, 말할 話","meaning":"① 서로 이야기를 주고받음. ② 한 단체나 공적인 자리에 있는 사람이 어떤 문제에 대한 견해나 태도를 밝히는 말. ③ 둘 이상의 문장이 연속되어 이루어지는 말의 단위."},{"chapter":"27강","word":"전제하다","hanja":"앞 前, 끌 提","meaning":"어떠한 사물이나 현상을 이루기 위하여 먼저 내세우다."},{"chapter":"27강","word":"대용 표현","hanja":"대신할 代, 쓸 ?, 겉 表, 나타날 現","meaning":"담화에서 언급된 말, 혹은 뒤에서 언급될 말을 대신하는 표현."},{"chapter":"27강","word":"토대","hanja":"흙 土, 돈대 臺","meaning":"① 목조 건축에서, 기초 위에 가로 대어 기둥을 고정하는 목조 부재. ② 어떤 사물이나 사업의 밑바탕이 되는 기초와 밑천을 비유적으로 이르는 말."},{"chapter":"27강","word":"방점","hanja":"곁 傍, 점찍을 點","meaning":"① 글 가운데에서 보는 사람의 주의를 끌기 위하여 글자 옆이나 위에 찍는 점. ② 중세 국어 각 음절의 성조를 표시하기 위한 「훈민정음」의 표기법."},{"chapter":"27강","word":"언중","hanja":"말씀 言, 무리 衆","meaning":"같은 언어를 사용하면서 공동생활을 하는 언어 사회 안의 대중(大衆)."},{"chapter":"28강","word":"공유","hanja":"함께 共, 있을 有","meaning":"① 두 사람 이상이 한 물건을 공동으로 소유하거나 이용함. ② 정보나 의견, 감정 따위를 나눔."},{"chapter":"28강","word":"대비","hanja":"대할 對, 견줄 比","meaning":"두 가지의 차이를 밝히기 위하여 서로 맞대어 비교함. 또는 그런 비교."},{"chapter":"28강","word":"동조하다","hanja":"같을 同, 고를 調","meaning":"남의 주장에 자기의 의견을 일치시키거나 보조를 맞춤."},{"chapter":"28강","word":"명시하다","hanja":"밝을 明, 보일 示","meaning":"분명하게 드러내 보이다."},{"chapter":"28강","word":"열람하다","hanja":"조사할 閱, 볼 覽","meaning":"책이나 문서 따위를 죽 훑어보거나 조사하면서 보다."},{"chapter":"28강","word":"추이","hanja":"옮길 推, 옮길 移","meaning":"일이나 형편이 시간의 경과에 따라 변하여 나감. 또는 그런 경향."},{"chapter":"28강","word":"시의성","hanja":"때 時, 알맞을 宜, 성질 性","meaning":"그 당시의 사정이나 사회적 요구에 들어맞는 성질."},{"chapter":"28강","word":"타당성","hanja":"온당할 妥, 마땅할 當, 성질 性","meaning":"사물의 이치에 맞는 옳은 성질."},{"chapter":"28강","word":"비선형적","hanja":"아닐 非, 선 線, 형상 形, 어조사 的","meaning":"선처럼 길게 일렬로 나아가지 않는 (것)."}]; 
+    const EMBEDDED_BOOK_NAME = "ebs 어휘가 독해다 Eden Voc 260512";
+    const IS_STUDENT_VERSION = true; 
+
+    // 🔥 구글 사이트의 샌드박스 보안을 뚫기 위한 JSONP 방식 URL 세팅
+    const AUTH_SHEET_ID = "17ARTCYwJFKBGhZmtsHnyGxLce4Jl5wd9dRmvZFMTJhs";
+
+    // 원장님 구글 폼 ID
+    const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSek78-2N5EvQvUfOsGvE74PGdGINw_UmkqlqBfYH-AM1s1jCg/formResponse";
+    const ENTRY_IDS = {
+        seat: "entry.1387345994",      
+        name: "entry.727055287",       
+        chapter: "entry.674261532",    
+        time1: "entry.309166075",      
+        time2: "entry.1217935655",     
+        time3: "entry.1149130991",     
+        time4: "entry.1579947385",     
+        wrongWords: "entry.1787176959"  
+    };
+
+    let submitted = false;
+    document.getElementById('hidden_iframe').onload = function() {
+        if (submitted) { alert('학습 결과가 원장님께 전송되었습니다.'); submitted = false; }
+    };
+
+    let originalWordData = EMBEDDED_DATA.length > 0 ? EMBEDDED_DATA : [{chapter:"기본단원", word:"upload_required", hanja:"", meaning:"자료를 업로드해주세요"}];
+    let textbookName = EMBEDDED_BOOK_NAME;
+
+    /* --- 상태 변수 --- */
+    let activeWordData = [], pendingQueue = [], boxes = { left: [], mid: [], right: [] };
+    let mode = 0, isEnToKo = true, currentWord = null, isFlipped = false, currentCycle = 1;
+    let currentSessionId = null, globalStopwatch, timer3Sec;
+    let sessionData = { time1: 0, time2: 0, time3: 0, time4: 0, p3Stats: { right: 0, mid: 0, left: 0 }, wrongWords: [] };
+    let isAnimating = false; 
+
+    /* --- 초기화 블록 --- */
+    window.onload = function() {
+        if (IS_STUDENT_VERSION) {
+            document.getElementById('btnUpload').style.display = 'none';
+        }
+        
+        if (localStorage.getItem('edenSeat')) {
+            document.getElementById('seatInput').value = localStorage.getItem('edenSeat');
+        }
+        if (localStorage.getItem('edenName')) {
+            document.getElementById('nameInput').value = localStorage.getItem('edenName');
+        }
+
+        showStartModal();
+        
+        document.body.addEventListener('touchstart', unlockAudio, {once:true});
+        document.body.addEventListener('click', unlockAudio, {once:true});
+    };
+
+    /* --- 🔥 실시간 학생 인증 로직 (CORS 완벽 우회 JSONP 적용) --- */
+    function fetchAuthData() {
+        return new Promise((resolve, reject) => {
+            const scriptId = 'google-sheet-jsonp';
+            let oldScript = document.getElementById(scriptId);
+            if (oldScript) oldScript.remove();
+
+            // 구글 서버가 데이터를 감싸서 이 함수로 던져줌 (CORS 회피)
+            window.handleAuthResponse = function(response) {
+                resolve(response);
+                delete window.handleAuthResponse;
+            };
+
+            const script = document.createElement('script');
+            script.id = scriptId;
+            script.src = `https://docs.google.com/spreadsheets/d/${AUTH_SHEET_ID}/gviz/tq?tqx=responseHandler:handleAuthResponse`;
+            script.onerror = () => reject(new Error("Script loading failed"));
+            document.body.appendChild(script);
+            
+            // 너무 오래 걸리면 에러 처리
+            setTimeout(() => reject(new Error("Timeout")), 10000);
+        });
+    }
+
+    async function verifyAndInit(m) {
+        const name = document.getElementById('nameInput').value.trim();
+        const pw = document.getElementById('pwInput').value.trim();
+
+        if (!name || !pw) {
+            alert("이름과 비밀번호를 모두 입력해 주세요.");
+            return;
+        }
+
+        const btnGroup = document.getElementById('authBtnGroup');
+        const originalHtml = btnGroup.innerHTML;
+        btnGroup.innerHTML = "<p style='color:#3498db; font-weight:bold; padding: 10px 0;'>인증을 확인하는 중입니다...</p>";
+
+        try {
+            const response = await fetchAuthData();
+            let isAuthorized = false;
+
+            if (response && response.status === 'ok') {
+                const rows = response.table.rows;
+                // 시트 데이터 추출 및 대조
+                for (let i = 0; i < rows.length; i++) {
+                    if (!rows[i] || !rows[i].c) continue;
+                    
+                    const cellName = rows[i].c[0]; // A열 이름
+                    const cellPw = rows[i].c[1];   // B열 비번
+                    
+                    const rName = cellName && cellName.v != null ? String(cellName.v).trim() : "";
+                    const rPw = cellPw && cellPw.v != null ? String(cellPw.v).trim() : "";
+
+                    if (rName === name && rPw === pw) {
+                        isAuthorized = true;
+                        break;
+                    }
+                }
+            } else {
+                throw new Error("Invalid response format");
+            }
+
+            if (isAuthorized) {
+                btnGroup.innerHTML = originalHtml;
+                if (m === 4) startMode4();
+                else initApp(m, true);
+            } else {
+                alert("인증 실패! 이름이나 비밀번호가 일치하지 않습니다.");
+                btnGroup.innerHTML = originalHtml;
+            }
+        } catch (error) {
+            console.error("Auth Error:", error);
+            alert("인증 서버 연결 오류!\n네트워크 상태를 확인하시거나 구글 시트 공유 설정('링크가 있는 모든 사용자')을 확인해주세요.");
+            btnGroup.innerHTML = originalHtml;
+        }
+    }
+
+    /* --- 마스터 배포 파일 생성 --- */
+    function generateStudentFile() {
+        const bookName = document.getElementById('adminBookName').value.trim();
+        if(!bookName) { alert("교재 제목을 먼저 입력해주세요."); return; }
+        
+        let currentHtml = document.documentElement.outerHTML;
+        const dataJson = JSON.stringify(originalWordData);
+        
+        currentHtml = currentHtml.replace(/const EMBEDDED_DATA = \[\];/, `const EMBEDDED_DATA = ${dataJson};`);
+        currentHtml = currentHtml.replace(/const EMBEDDED_BOOK_NAME = "";/, `const EMBEDDED_BOOK_NAME = "${bookName}";`);
+        currentHtml = currentHtml.replace(/const IS_STUDENT_VERSION = false;/, `const IS_STUDENT_VERSION = true;`);
+
+        const blob = new Blob([currentHtml], { type: 'text/html' });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = `Eden_Voc_${bookName}.html`;
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        alert("학생용 배포 파일이 생성되었습니다!");
+    }
+
+    /* --- 모바일 음성 먹통 방지 (Audio Unlock) 및 한국어 TTS --- */
+    let isAudioUnlocked = false; 
+
+    function unlockAudio() {
+        if (isAudioUnlocked || !window.speechSynthesis) return;
+        const u = new SpeechSynthesisUtterance(' '); 
+        u.volume = 0; 
+        u.rate = 10; 
+        window.speechSynthesis.speak(u);
+        isAudioUnlocked = true;
+    }
+
+    function speak(text) { 
+        try {
+            if(!window.speechSynthesis) return;
+            window.speechSynthesis.cancel(); 
+            const u = new SpeechSynthesisUtterance(text); 
+            u.lang = 'ko-KR'; 
+            u.rate = 0.9; 
+            window.speechSynthesis.speak(u); 
+        } catch(e) { console.warn("TTS Error:", e); }
+    }
+
+    /* --- 구글폼 전송 로직 --- */
+    function sendDataToGoogleForm() {
+        unlockAudio(); 
+        const seat = document.getElementById('seatInput').value.trim();
+        const name = document.getElementById('nameInput').value.trim();
+        if (!seat || !name) { alert("학생 좌석번호와 이름을 먼저 입력해주세요."); showStartModal(); return; }
+        
+        localStorage.setItem('edenSeat', seat);
+        localStorage.setItem('edenName', name);
+
+        let h = JSON.parse(localStorage.getItem('leitnerHistory') || '[]');
+        let targetIdx = h.findIndex(x => x.submitted === false);
+        
+        let dataToSend = sessionData;
+        let chapterToSend = document.getElementById('chapterSelect').value;
+
+        if (targetIdx > -1) {
+            chapterToSend = h[targetIdx].chapter;
+            dataToSend = h[targetIdx].data;
+            h[targetIdx].submitted = true;
+            localStorage.setItem('leitnerHistory', JSON.stringify(h));
+        } else {
+            if (!currentSessionId) {
+                alert("전송할 새로운 학습 기록이 없습니다.");
+                return;
+            }
+            let currIdx = h.findIndex(x => x.id === currentSessionId);
+            if (currIdx > -1) {
+                h[currIdx].submitted = true;
+                localStorage.setItem('leitnerHistory', JSON.stringify(h));
+                dataToSend = h[currIdx].data;
+                chapterToSend = h[currIdx].chapter;
+            }
+        }
+
+        const form = document.createElement("form");
+        form.action = GOOGLE_FORM_URL; form.method = "POST"; form.target = "hidden_iframe";
+        
+        const add = (n,v) => { const i = document.createElement("input"); i.type = "hidden"; i.name = n; i.value = v; form.appendChild(i); };
+        
+        add(ENTRY_IDS.seat, seat); add(ENTRY_IDS.name, name); add(ENTRY_IDS.chapter, chapterToSend);
+        add(ENTRY_IDS.time1, formatTimeKor(dataToSend.time1)); add(ENTRY_IDS.time2, formatTimeKor(dataToSend.time2));
+        add(ENTRY_IDS.time3, formatTimeKor(dataToSend.time3)); add(ENTRY_IDS.time4, formatTimeKor(dataToSend.time4));
+        
+        const wrongStr = dataToSend.wrongWords.map(w => `${w.word}|${w.meaning||""}`).join('\n') || "없음";
+        add(ENTRY_IDS.wrongWords, wrongStr);
+        
+        document.body.appendChild(form); submitted = true; form.submit();
+        alert(`[${chapterToSend}] 단원의 학습 결과가 원장님께 정상적으로 전송 중입니다.`);
+        
+        currentSessionId = null;
+        sessionData = { time1: 0, time2: 0, time3: 0, time4: 0, p3Stats: { right: 0, mid: 0, left: 0 }, wrongWords: [] };
+
+        setTimeout(() => { if (document.body.contains(form)) document.body.removeChild(form); }, 1000);
+    }
+
+    function formatTimeKor(s) { if(!s||s===0) return "0초"; let m=Math.floor(s/60); return m>0 ? `${m}분 ${s%60}초` : `${s%60}초`; }
+
+    function startRealtimeStopwatch() {
+        clearInterval(globalStopwatch);
+        document.getElementById('stopwatchDisplay').style.display = 'block';
+        globalStopwatch = setInterval(() => {
+            if (mode === 1) sessionData.time1++; else if (mode === 2) sessionData.time2++; else if (mode === 3) sessionData.time3++; else if (mode === 4) sessionData.time4++;
+            let s = [0, sessionData.time1, sessionData.time2, sessionData.time3, sessionData.time4][mode];
+            document.getElementById('stopwatchDisplay').innerText = `⏱ ${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+            updateSessionToStorage();
+        }, 1000);
+    }
+
+    function updateSessionToStorage() {
+        if (!currentSessionId) return;
+        let h = JSON.parse(localStorage.getItem('leitnerHistory') || '[]');
+        let i = h.findIndex(x => x.id === currentSessionId);
+        if (i > -1) { h[i].data = sessionData; localStorage.setItem('leitnerHistory', JSON.stringify(h)); }
+        if (sessionData.wrongWords.length > 0) localStorage.setItem('leitnerWrongWords', JSON.stringify(sessionData.wrongWords));
+    }
+
+    function handleChapterChange(e) {
+        let h = JSON.parse(localStorage.getItem('leitnerHistory') || '[]');
+        let unsubmitted = h.find(x => x.submitted === false);
+
+        if (unsubmitted && unsubmitted.chapter !== e.target.value) {
+            alert(`[${unsubmitted.chapter}] 단원의 학습 결과가 아직 전송되지 않았습니다.\n다른 단원을 학습하려면 먼저 [결과 전송]을 완료해주세요.`);
+            e.target.value = unsubmitted.chapter; // 선택을 강제로 되돌림
+            return;
+        }
+        
+        currentSessionId = null; 
+        showStartModal(); 
+    }
+
+    /* --- 기본 학습 앱 로직 --- */
+    function initApp(m, isNew = false) {
+        unlockAudio(); 
+        const seat = document.getElementById('seatInput').value.trim();
+        const name = document.getElementById('nameInput').value.trim();
+        if(!seat || !name) { alert("시작 전, 학생 좌석번호와 이름을 꼭 입력해주세요."); return; }
+        
+        const selectedCh = document.getElementById('chapterSelect').value;
+
+        // 이전 단원 결과 전송 여부 강제 확인 (안전장치)
+        let h = JSON.parse(localStorage.getItem('leitnerHistory') || '[]');
+        let unsubmitted = h.find(x => x.submitted === false && x.chapter !== selectedCh);
+        if (unsubmitted) {
+            alert(`[${unsubmitted.chapter}] 단원의 학습이 완료되지 않았거나 전송되지 않았습니다.\n다른 단원을 시작하기 전에 이전 단원의 [학습 결과 전송하기]를 완료해주세요.`);
+            document.getElementById('chapterSelect').value = unsubmitted.chapter;
+            return;
+        }
+
+        localStorage.setItem('edenSeat', seat);
+        localStorage.setItem('edenName', name);
+
+        mode = m;
+        isEnToKo = document.querySelector('input[name="modalLang"]:checked').value === 'en2ko';
+        document.querySelector(`input[name="topLang"][value="${isEnToKo?'en2ko':'ko2en'}"]`).checked = true;
+
+        if (!currentSessionId) {
+            currentSessionId = Date.now();
+            sessionData = { time1: 0, time2: 0, time3: 0, time4: 0, p3Stats: { right: 0, mid: 0, left: 0 }, wrongWords: [] };
+            activeWordData = originalWordData.filter(item => item.chapter === selectedCh);
+            if (activeWordData.length === 0) activeWordData = [...originalWordData];
+            
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')} ${String(today.getHours()).padStart(2,'0')}:${String(today.getMinutes()).padStart(2,'0')}`;
+            
+            h.push({ 
+                id: currentSessionId, 
+                chapter: selectedCh, 
+                date: dateStr, 
+                data: sessionData, 
+                valid: true,
+                submitted: false 
+            });
+            localStorage.setItem('leitnerHistory', JSON.stringify(h));
+        }
+
+        pendingQueue = [...activeWordData]; 
+        boxes = { left: [], mid: [], right: [] }; 
+        if(mode === 2) currentCycle = 1;
+        
+        document.getElementById('modalOverlay').style.display = 'none';
+        
+        const titleEl = document.getElementById('modeTitle');
+        const dashEl = document.getElementById('mainDash');
+        const timerEl = document.getElementById('timerContainer');
+        const badgeEl = document.getElementById('cycleBadge');
+        const progressEl = document.getElementById('progressText');
+
+        if(mode === 1) {
+            titleEl.innerText = "1차 학습: 단어 익히기";
+            dashEl.classList.add('hidden');
+            timerEl.style.display = 'none';
+            badgeEl.style.display = 'none';
+            document.getElementById('mainArea').className = 'main-area';
+            progressEl.className = 'progress-badge badge-default';
+        } else if(mode === 2) {
+            titleEl.innerText = "2차 학습: 분류 훈련";
+            dashEl.classList.remove('hidden');
+            timerEl.style.display = 'none';
+            badgeEl.style.display = 'block';
+            badgeEl.innerText = `${currentCycle}회독`;
+            badgeEl.className = `progress-badge badge-cycle-${currentCycle}`;
+            progressEl.className = `progress-badge badge-cycle-${currentCycle}`;
+            document.getElementById('mainArea').className = `main-area cycle-${currentCycle}`;
+        } else if(mode === 3) {
+            titleEl.innerText = "3차 학습: 실전 테스트!";
+            dashEl.classList.remove('hidden');
+            timerEl.style.display = 'block';
+            badgeEl.style.display = 'block';
+            badgeEl.innerText = '최종 테스트';
+            badgeEl.className = 'progress-badge badge-cycle-3';
+            progressEl.className = 'progress-badge badge-cycle-3';
+            document.getElementById('mainArea').className = 'main-area cycle-3';
+        }
+
+        startRealtimeStopwatch(); 
+        nextCard();
+    }
+
+    function startMode4() {
+        unlockAudio(); 
+        const seat = document.getElementById('seatInput').value.trim();
+        const name = document.getElementById('nameInput').value.trim();
+        if(!seat || !name) { alert("시작 전, 학생 좌석번호와 이름을 꼭 입력해주세요."); return; }
+        
+        const selectedCh = document.getElementById('chapterSelect').value;
+
+        // 이전 단원 결과 전송 여부 강제 확인 (안전장치)
+        let h = JSON.parse(localStorage.getItem('leitnerHistory') || '[]');
+        let unsubmitted = h.find(x => x.submitted === false && x.chapter !== selectedCh);
+        if (unsubmitted) {
+            alert(`[${unsubmitted.chapter}] 단원의 학습 결과가 아직 전송되지 않았습니다.\n다른 단원을 시작하기 전에 이전 단원의 [학습 결과 전송하기]를 완료해주세요.`);
+            document.getElementById('chapterSelect').value = unsubmitted.chapter;
+            return;
+        }
+
+        localStorage.setItem('edenSeat', seat);
+        localStorage.setItem('edenName', name);
+
+        let savedWrongs = JSON.parse(localStorage.getItem('leitnerWrongWords') || '[]');
+        if (savedWrongs.length === 0) { alert("저장된 오답이 없습니다. 3차 실전 테스트를 먼저 진행하세요!"); return; }
+        
+        if (!currentSessionId) {
+            currentSessionId = Date.now();
+            sessionData = { time1: 0, time2: 0, time3: 0, time4: 0, p3Stats: { right: 0, mid: 0, left: 0 }, wrongWords: [] };
+        }
+
+        mode = 4; activeWordData = [...savedWrongs]; 
+        pendingQueue = [...activeWordData]; 
+        boxes = { left: [], mid: [], right: [] }; 
+        
+        document.getElementById('modalOverlay').style.display = 'none';
+        document.getElementById('modeTitle').innerText = "4차 학습: 오답 완벽 체화";
+        document.getElementById('mainDash').classList.remove('hidden');
+        document.getElementById('timerContainer').style.display = 'none';
+        
+        const badgeEl = document.getElementById('cycleBadge');
+        badgeEl.style.display = 'block';
+        badgeEl.innerText = '오답 복습';
+        badgeEl.className = 'progress-badge badge-cycle-4';
+        document.getElementById('progressText').className = 'progress-badge badge-cycle-4';
+        document.getElementById('mainArea').className = 'main-area cycle-4';
+
+        startRealtimeStopwatch(); 
+        nextCard();
+    }
+
+    /* --- 핵심 카드 교체 로직 --- */
+    function nextCard() {
+        isFlipped = false;
+        const c = document.getElementById('wordCard'), w = document.getElementById('swipeWrapper');
+        c.style.transition = 'none'; c.classList.remove('is-flipped');
+        w.style.transition = 'none'; w.style.opacity = '1'; w.style.transform = 'translate(0,0) rotate(0)';
+        
+        document.getElementById('frontGuide').innerText = "터치하여 확인";
+        document.getElementById('backGuide').innerText = "밀어서 분류하세요";
+
+        setTimeout(() => { c.style.transition = 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)'; w.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s'; }, 50);
+        clearInterval(timer3Sec);
+        
+        if (pendingQueue.length === 0) {
+            return showSummary();
+        }
+        currentWord = pendingQueue.shift();
+        
+        updateUI();
+        
+        if (isEnToKo) speak(currentWord.word);
+        
+        if (mode === 3) start3Timer();
+    }
+
+    /* 🔥 앞면(B열, C열) / 뒷면(D열 - 고정 크기) 배치 */
+    function updateUI() {
+        if (!currentWord) return;
+        const f = document.getElementById('frontText'), b = document.getElementById('backText');
+        const mult = parseFloat(document.getElementById('fontSizeLevel').value);
+
+        let wordText = currentWord.word || "";       
+        let hanjaText = currentWord.hanja || "";     
+        let meaningText = currentWord.meaning || ""; 
+
+        let sizeWord = 40 * mult;
+        let sizeHanja = 24 * mult;
+        let sizeMeaning = 20 * mult; // 고정 크기로 안정감 유지
+
+        // 앞면 HTML 조합: B열(어휘)은 크게, C열(한자어)은 작게
+        let frontHTML = `<div style="font-size:${sizeWord}px; font-weight:900; color:#1a5f7a; line-height:1.2; margin-bottom:10px;">${wordText}</div>`;
+        if (hanjaText) {
+            frontHTML += `<div style="font-size:${sizeHanja}px; font-weight:700; color:#555; line-height:1.2;">${hanjaText}</div>`;
+        }
+
+        // 뒷면 HTML: D열(뜻) - 크기를 고정하여 안정감 부여
+        let backHTML = `<div style="font-size:${sizeMeaning}px; font-weight:700; color:#333; word-break:keep-all; line-height:1.5;">${meaningText}</div>`;
+
+        // 모드에 맞춰 앞뒷면 주입
+        if (isEnToKo) {
+            f.innerHTML = frontHTML;
+            b.innerHTML = backHTML;
+            f.className = "word-text";
+            b.className = "word-text";
+        } else {
+            f.innerHTML = backHTML;
+            b.innerHTML = frontHTML;
+            f.className = "word-text";
+            b.className = "word-text";
+        }
+        
+        const totalCount = activeWordData.length;
+        if (mode === 1) {
+            document.getElementById('progressText').innerText = `진행: ${totalCount - pendingQueue.length} / ${totalCount}`;
+        } else {
+            document.getElementById('progressText').innerText = `완료: ${boxes.right.length} / ${totalCount}`;
+        }
+        
+        document.getElementById('cntLeft').innerText = boxes.left.length;
+        document.getElementById('cntMid').innerText = boxes.mid.length;
+        document.getElementById('cntRight').innerText = boxes.right.length;
+    }
+
+    /* --- 결산 및 라운드 재개 --- */
+    function showSummary() {
+        clearInterval(globalStopwatch); updateSessionToStorage();
+        document.getElementById('modalOverlay').style.display = 'flex';
+        const m = document.getElementById('resultModal'); m.classList.remove('hidden');
+        document.getElementById('startModal').classList.add('hidden');
+        document.getElementById('historyModal').classList.add('hidden');
+        
+        document.getElementById('resLeft').innerText = boxes.left.length;
+        document.getElementById('resMid').innerText = boxes.mid.length;
+        document.getElementById('resRight').innerText = boxes.right.length;
+        const btns = document.getElementById('resultActionBtns');
+
+        if (mode === 1) {
+            document.getElementById('resultTitle').innerText = "1차 학습 완료!";
+            document.getElementById('resultMsg').innerText = "단어를 모두 훑어보았습니다.";
+            btns.innerHTML = `<button class="btn-main btn-blue" onclick="initApp(1, false)">다시 연습하기</button><button class="btn-main btn-orange" onclick="initApp(2, false)">2차 학습 시작하기</button>`;
+        } else if (mode === 4) {
+            if (boxes.right.length === activeWordData.length) {
+                document.getElementById('resultTitle').innerText = "오답 정복 완료!"; document.getElementById('resultMsg').innerText = "틀렸던 단어를 모두 암기했습니다!";
+                btns.innerHTML = `<button class="btn-main btn-gray" onclick="showStartModal()">메뉴로 가기</button>`; localStorage.removeItem('leitnerWrongWords'); 
+            } else {
+                document.getElementById('resultTitle').innerText = "라운드 정리"; document.getElementById('resultMsg').innerText = "남은 오답 카드를 다시 훈련합니다.";
+                btns.innerHTML = `<button class="btn-main btn-blue" onclick="resumeRound()">다음 라운드 진행</button>`;
+            }
+        } else {
+            if (boxes.right.length === activeWordData.length) {
+                if (mode === 2 && currentCycle < 3) {
+                    document.getElementById('resultTitle').innerText = `${currentCycle}회독 완료!`; document.getElementById('resultMsg').innerText = `이어서 ${currentCycle + 1}회독을 진행합니다.`;
+                    btns.innerHTML = `<button class="btn-main btn-orange" onclick="startNextCycle()">다음 회독 시작</button>`;
+                } else if (mode === 2 && currentCycle === 3) {
+                    document.getElementById('resultTitle').innerText = "2차 학습 완료!"; document.getElementById('resultMsg').innerText = `모든 분류가 끝났습니다. 실전 테스트로 이동하세요.`;
+                    btns.innerHTML = `<button class="btn-main btn-green" onclick="initApp(3, false)">3차 테스트 시작</button>`;
+                } else {
+                    document.getElementById('resultTitle').innerText = "최종 테스트 통과!"; document.getElementById('resultMsg').innerHTML = `수고하셨습니다!<br>틀린 문제는 '4차 학습'에 저장되었습니다.`;
+                    btns.innerHTML = `<button class="btn-main btn-gray" onclick="showStartModal()">메뉴로 가기</button>`;
+                }
+            } else {
+                document.getElementById('resultTitle').innerText = "라운드 정리"; document.getElementById('resultMsg').innerText = "남은 카드를 다시 훈련합니다.";
+                btns.innerHTML = `<button class="btn-main btn-blue" onclick="resumeRound()">다음 라운드 진행</button>`;
+            }
+        }
+    }
+
+    function resumeRound() {
+        document.getElementById('modalOverlay').style.display = 'none';
+        pendingQueue = [...boxes.left, ...boxes.mid];
+        boxes.left = []; boxes.mid = [];
+        startRealtimeStopwatch(); nextCard();
+    }
+
+    function startNextCycle() {
+        document.getElementById('modalOverlay').style.display = 'none'; currentCycle++;
+        const badgeEl = document.getElementById('cycleBadge');
+        badgeEl.innerText = `${currentCycle}회독`; badgeEl.className = `progress-badge badge-cycle-${currentCycle}`;
+        document.getElementById('progressText').className = `progress-badge badge-cycle-${currentCycle}`;
+        document.getElementById('mainArea').className = `main-area cycle-${currentCycle}`;
+        
+        pendingQueue = [...activeWordData]; 
+        boxes = { left: [], mid: [], right: [] };
+        startRealtimeStopwatch(); nextCard();
+    }
+
+    /* ====== 🔥 엑셀(CSV) 업로드 ====== */
+    function triggerCsvUpload() { document.getElementById('csvFileInput').click(); }
+    
+    function handleCsvUpload(ev) {
+        const f = ev.target.files[0]; if(!f) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const buffer = e.target.result;
+            const utf8Text = new TextDecoder('utf-8').decode(buffer);
+            const eucKrText = new TextDecoder('euc-kr').decode(buffer);
+            const utf8Match = (utf8Text.match(/[가-힣]/g) || []).length;
+            const eucKrMatch = (eucKrText.match(/[가-힣]/g) || []).length;
+            parseCSVText((eucKrMatch > utf8Match) ? eucKrText : utf8Text);
+        };
+        reader.readAsArrayBuffer(f);
+        ev.target.value = ''; 
+    }
+
+    function parseCSVText(text) {
+        text = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        const rows = text.split('\n');
+        const data = [];
+        for(let i=0; i<rows.length; i++){
+            let row = rows[i].trim(); if(!row) continue;
+            const c = []; let curr = '', inQ = false;
+            for(let j=0; j<row.length; j++) {
+                if(row[j]==='"') inQ = !inQ; else if(row[j]===',' && !inQ) { c.push(curr); curr=''; } else curr += row[j];
+            }
+            c.push(curr);
+            
+            // 4개 열(강, 어휘, 한자어, 뜻) 파싱 처리
+            if(c.length >= 4){
+                let ch=c[0].trim().replace(/^"|"$/g, ''), 
+                    wo=c[1].trim().replace(/^"|"$/g, ''), 
+                    ha=c[2].trim().replace(/^"|"$/g, ''), 
+                    me=c.slice(3).join(',').trim().replace(/^"|"$/g, '');
+                if(i===0 && (ch.includes('강')||wo.includes('어휘'))) continue; 
+                if(ch && wo) data.push({chapter:ch, word:wo, hanja:ha, meaning:me});
+            } else if(c.length === 3) {
+                let ch=c[0].trim().replace(/^"|"$/g, ''), 
+                    wo=c[1].trim().replace(/^"|"$/g, ''), 
+                    ha=c[2].trim().replace(/^"|"$/g, '');
+                if(i===0 && (ch.includes('강')||wo.includes('어휘'))) continue; 
+                if(ch && wo) data.push({chapter:ch, word:wo, hanja:ha, meaning:""});
+            }
+        }
+        if(data.length>0){
+            originalWordData = data;
+            
+            let currentVal = document.getElementById('chapterSelect').value;
+            const chs = [...new Set(data.map(x=>x.chapter))];
+            const sel = document.getElementById('chapterSelect'); sel.innerHTML = '';
+            chs.forEach(x=>{ let o=document.createElement('option'); o.value=x; o.text=x; sel.appendChild(o); });
+            
+            let h = JSON.parse(localStorage.getItem('leitnerHistory') || '[]');
+            let unsubmitted = h.find(x => x.submitted === false);
+            if (unsubmitted && chs.includes(unsubmitted.chapter)) {
+                sel.value = unsubmitted.chapter;
+            } else if (chs.includes(currentVal)) {
+                sel.value = currentVal;
+            }
+
+            document.getElementById('genFileBtn').disabled = false;
+            document.getElementById('genFileBtn').style.opacity = "1";
+            document.getElementById('uploadStatus').innerText = `${data.length}개 단어 준비 완료!`;
+            alert("업로드 성공! 이제 교재명을 입력하고 파일 제작 버튼을 누르세요.");
+        } else { alert("올바른 형식이 아닙니다."); }
+    }
+
+    /* --- 부가 메뉴 관리 --- */
+    function resetSessionAndShowModal() { 
+        currentSessionId = null; 
+        showStartModal(); 
+    }
+
+    function showStartModal() { 
+        clearInterval(globalStopwatch);
+        document.getElementById('modalOverlay').style.display = 'flex';
+        document.getElementById('resultModal').classList.add('hidden');
+        document.getElementById('historyModal').classList.add('hidden');
+        document.getElementById('guideModal').classList.add('hidden');
+
+        document.getElementById('authBtnGroup').style.pointerEvents = "auto";
+        document.getElementById('authBtnGroup').style.opacity = "1";
+
+        if (IS_STUDENT_VERSION) {
+            document.getElementById('adminModal').classList.add('hidden');
+            document.getElementById('startModal').classList.remove('hidden');
+            document.getElementById('studentBookTitle').innerText = textbookName;
+            const chs = [...new Set(originalWordData.map(x=>x.chapter))];
+            const sel = document.getElementById('chapterSelect'); sel.innerHTML = '';
+            chs.forEach(x=>{ let o=document.createElement('option'); o.value=x; o.text=x; sel.appendChild(o); });
+        } else {
+            document.getElementById('adminModal').classList.remove('hidden');
+            document.getElementById('startModal').classList.add('hidden');
+        }
+    }
+
+    function showGuideModal() {
+        document.getElementById('startModal').classList.add('hidden');
+        document.getElementById('guideModal').classList.remove('hidden');
+    }
+    
+    function closeGuideModal() {
+        document.getElementById('guideModal').classList.add('hidden');
+        document.getElementById('startModal').classList.remove('hidden');
+    }
+
+    function showHistory() {
+        clearInterval(globalStopwatch); updateSessionToStorage();
+        document.getElementById('modalOverlay').style.display = 'flex';
+        document.getElementById('historyModal').classList.remove('hidden');
+        document.getElementById('startModal').classList.add('hidden');
+        document.getElementById('resultModal').classList.add('hidden');
+        document.getElementById('adminModal').classList.add('hidden');
+        document.getElementById('guideModal').classList.add('hidden');
+        
+        const list = document.getElementById('historyList'); list.innerHTML = '';
+        const history = JSON.parse(localStorage.getItem('leitnerHistory') || '[]');
+        if (history.length === 0) { list.innerHTML = '<tr><td colspan="7" style="padding:20px;">학습 기록이 없습니다.</td></tr>'; return; }
+
+        history.reverse().forEach(r => {
+            const d = r.data, t = d.time1 + d.time2 + d.time3 + d.time4;
+            const w = d.wrongWords.map(x => `<b>${x.word}</b> | ${x.meaning || ""}`).join('<br>') || '-';
+            list.innerHTML += `<tr style="border-bottom:1px solid #eee"><td>${r.chapter}<br><span style="font-size:10px;color:#999;">${r.date.split(' ')[1]||''}</span></td><td>${formatTimeKor(d.time1)}</td><td>${formatTimeKor(d.time2)}</td><td>${formatTimeKor(d.time3)}</td><td>${formatTimeKor(d.time4)}</td><td style="font-weight:bold; color:#e74c3c;">${formatTimeKor(t)}</td><td class="wrong-words-cell">${w}</td></tr>`;
+        });
+    }
+
+    function closeHistory() { document.getElementById('historyModal').classList.add('hidden'); showStartModal(); }
+    function syncLangAndUpdate() { isEnToKo = document.querySelector('input[name="topLang"]:checked').value === 'en2ko'; document.querySelector(`input[name="modalLang"][value="${isEnToKo?'en2ko':'ko2en'}"]`).checked = true; updateUI(); }
+    function clearAllHistory() { if(confirm("모든 기록을 삭제합니다.")) { localStorage.removeItem('leitnerHistory'); localStorage.removeItem('leitnerWrongWords'); alert("초기화되었습니다."); showHistory(); } }
+    
+    function exportToCSV() {
+        let history = JSON.parse(localStorage.getItem('leitnerHistory') || '[]');
+        if (history.length === 0) { alert("기록이 없습니다."); return; }
+        let csvContent = "\uFEFF학습일시,단원,1차 소요시간,2차 소요시간,3차 소요시간,4차 소요시간,총 소요시간,오답노트\n";
+        history.forEach(r => {
+            let d = r.data, t = d.time1 + d.time2 + d.time3 + d.time4, w = d.wrongWords.map(w => `${w.word}|${w.meaning || ""}`).join(' / ');
+            csvContent += `"${r.date}","${r.chapter}","${formatTimeKor(d.time1)}","${formatTimeKor(d.time2)}","${formatTimeKor(d.time3)}","${formatTimeKor(d.time4)}","${formatTimeKor(t)}","${w}"\n`;
+        });
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "학습기록.csv"; link.click();
+    }
+
+    /* --- 🔥 터치 제어 --- */
+    function start3Timer() {
+        let r=3000; const b=document.getElementById('timerBar'); b.style.transition='none'; b.style.width='100%';
+        setTimeout(()=>{b.style.transition='width 3s linear'; b.style.width='0%';},50);
+        timer3Sec = setInterval(()=>{r-=100; if(r<=0){clearInterval(timer3Sec); speak("시간 초과"); if(!isFlipped)flipCard(); setTimeout(()=>fly('left'),1000);}},100);
+    }
+
+    const swipeWrap = document.getElementById('swipeWrapper');
+    let isDragging = false, startX = 0, startY = 0, curX = 0, curY = 0;
+    
+    swipeWrap.addEventListener('pointerdown', e => { 
+        if (isAnimating) return; 
+        isDragging = true; startX = e.clientX; startY = e.clientY; 
+        curX = 0; curY = 0;
+        swipeWrap.style.transition = 'none'; swipeWrap.setPointerCapture(e.pointerId); 
+    });
+    
+    swipeWrap.addEventListener('pointermove', e => { 
+        if (!isDragging || isAnimating || (!isFlipped && mode !== 1)) return; 
+        curX = e.clientX - startX; curY = e.clientY - startY; 
+        swipeWrap.style.transform = `translate(${curX}px, ${curY}px) rotate(${curX * 0.05}deg)`; 
+    });
+    
+    swipeWrap.addEventListener('pointerup', e => {
+        if (!isDragging || isAnimating) return; 
+        isDragging = false; swipeWrap.releasePointerCapture(e.pointerId);
+        
+        const dist = Math.hypot(curX, curY);
+        if (dist < 15) { 
+            if (!isFlipped) flipCard(); 
+            else if (mode === 1) fly('left'); 
+            return; 
+        }
+        
+        if (mode === 1) fly('left'); 
+        else if (!isFlipped) { swipeWrap.style.transition='0.3s'; swipeWrap.style.transform='translate(0,0)'; }
+        else if (curX > 80) fly('right'); 
+        else if (curX < -80) fly('left'); 
+        else if (curY < -80) fly('mid'); 
+        else { swipeWrap.style.transition='0.3s'; swipeWrap.style.transform='translate(0,0)'; }
+    });
+
+    function flipCard() { 
+        isFlipped = true; 
+        document.getElementById('wordCard').classList.add('is-flipped'); 
+        if (mode === 1) document.getElementById('frontGuide').innerText = "밀어서 다음 단어로";
+        if (!isEnToKo) speak(currentWord.word); 
+    }
+    
+    function fly(dir) {
+        if (isAnimating) return;
+        isAnimating = true; 
+        clearInterval(timer3Sec);
+        
+        if (mode === 3 || mode === 4) { 
+            if (dir === 'right') sessionData.p3Stats.right++; else if (dir === 'mid') sessionData.p3Stats.mid++; else sessionData.p3Stats.left++;
+            if (dir !== 'right' && !sessionData.wrongWords.some(x => x.word === currentWord.word)) {
+                sessionData.wrongWords.push({...currentWord});
+            }
+        }
+        
+        if (dir === 'right') boxes.right.push(currentWord); else if (dir === 'left') boxes.left.push(currentWord); else boxes.mid.push(currentWord);
+        
+        swipeWrap.style.transition = 'transform 0.4s ease-out, opacity 0.3s'; 
+        swipeWrap.style.opacity = '0';
+        let tx = (dir==='right'?500:(dir==='left'?-500:0)), ty = (dir==='mid'?-600:0);
+        swipeWrap.style.transform = `translate(${tx}px, ${ty}px) rotate(${tx*0.1}deg)`;
+        
+        setTimeout(() => {
+            try { nextCard(); } catch(e) { console.error(e); } finally { isAnimating = false; }
+        }, 350);
+    }
+
+</script>
+
+</body></html>
